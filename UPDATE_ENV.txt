@@ -1,0 +1,69 @@
+===========================================
+CARA FIX GAMBAR BERITA TIDAK MUNCUL
+===========================================
+
+MASALAH DITEMUKAN:
+APP_URL di file .env salah!
+
+Saat ini: APP_URL=http://localhost
+Harusnya: APP_URL=http://127.0.0.1:8000
+
+===========================================
+CARA MEMPERBAIKI:
+===========================================
+
+1. Buka file .env di root project
+   (File tersembunyi, aktifkan "Show hidden files")
+
+2. Cari baris:
+   APP_URL=http://localhost
+
+3. Ubah menjadi:
+   APP_URL=http://127.0.0.1:8000
+
+4. Save file
+
+5. Clear config cache:
+   php artisan config:clear
+
+6. Restart server:
+   Ctrl+C (stop)
+   php artisan serve (start)
+
+7. Hard refresh browser:
+   Ctrl + Shift + R
+
+===========================================
+ATAU GUNAKAN COMMAND INI:
+===========================================
+
+# Stop server dulu (Ctrl+C), lalu jalankan:
+
+php artisan config:clear
+php artisan serve
+
+# Lalu buka browser dan hard refresh
+
+===========================================
+PENJELASAN:
+===========================================
+
+Gambar berita ada di:
+- storage/app/public/news/cX4xUBvJrGdYtAK5nEUu9kdPhQiC7GlATofCw2qu.jpg ✅
+- public/storage/news/cX4xUBvJrGdYtAK5nEUu9kdPhQiC7GlATofCw2qu.jpg ✅
+
+Tapi URL yang di-generate salah:
+- Saat ini: http://localhost/storage/news/...
+- Harusnya: http://127.0.0.1:8000/storage/news/...
+
+Karena APP_URL di .env masih http://localhost
+
+===========================================
+SETELAH DIUBAH:
+===========================================
+
+Gambar akan muncul di:
+- http://127.0.0.1:8000/news
+- http://127.0.0.1:8000/ (beranda)
+
+===========================================

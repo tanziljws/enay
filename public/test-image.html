@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Image</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-box {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Test Gambar Galeri</h1>
+    
+    <div class="test-box">
+        <h2>Test 1: Direct Image Path</h2>
+        <p>Path: <code>/storage/gallery/Sh1wXXICIie9kqBjpKc2hDTsWOOI6KTvGGLgvG9e.jpg</code></p>
+        <img src="/storage/gallery/Sh1wXXICIie9kqBjpKc2hDTsWOOI6KTvGGLgvG9e.jpg" 
+             alt="Test Image"
+             onload="document.getElementById('status1').innerHTML = '<span class=success>✓ Gambar berhasil dimuat!</span>'"
+             onerror="document.getElementById('status1').innerHTML = '<span class=error>✗ Gambar gagal dimuat!</span>'">
+        <p id="status1">Loading...</p>
+    </div>
+
+    <div class="test-box">
+        <h2>Test 2: Dengan Cache Buster</h2>
+        <p>Path: <code>/storage/gallery/Sh1wXXICIie9kqBjpKc2hDTsWOOI6KTvGGLgvG9e.jpg?v=timestamp</code></p>
+        <img src="/storage/gallery/Sh1wXXICIie9kqBjpKc2hDTsWOOI6KTvGGLgvG9e.jpg?v=<?php echo time(); ?>" 
+             alt="Test Image 2"
+             onload="document.getElementById('status2').innerHTML = '<span class=success>✓ Gambar berhasil dimuat!</span>'"
+             onerror="document.getElementById('status2').innerHTML = '<span class=error>✗ Gambar gagal dimuat!</span>'">
+        <p id="status2">Loading...</p>
+    </div>
+
+    <div class="test-box">
+        <h2>Test 3: Gambar Lain di Folder</h2>
+        <p>Path: <code>/storage/gallery/30I8n6VNPsfhU3ktPVkHW966CwKZSchC6kA7Lzo4.jpg</code></p>
+        <img src="/storage/gallery/30I8n6VNPsfhU3ktPVkHW966CwKZSchC6kA7Lzo4.jpg" 
+             alt="Test Image 3"
+             onload="document.getElementById('status3').innerHTML = '<span class=success>✓ Gambar berhasil dimuat!</span>'"
+             onerror="document.getElementById('status3').innerHTML = '<span class=error>✗ Gambar gagal dimuat!</span>'">
+        <p id="status3">Loading...</p>
+    </div>
+
+    <div class="test-box">
+        <h2>Informasi Browser</h2>
+        <p>User Agent: <code id="ua"></code></p>
+        <p>Current URL: <code id="url"></code></p>
+        <p>Base URL: <code id="base"></code></p>
+    </div>
+
+    <div class="test-box">
+        <h2>📋 Instruksi</h2>
+        <ol>
+            <li>Jika semua gambar muncul dengan tanda ✓ hijau → <strong>Sistem OK!</strong></li>
+            <li>Jika ada ✗ merah → Ada masalah dengan path atau file</li>
+            <li>Buka Console (F12) untuk lihat error detail</li>
+            <li>Check Network tab untuk lihat HTTP status</li>
+        </ol>
+        
+        <h3>Jika Gambar Tidak Muncul:</h3>
+        <ul>
+            <li>Hard refresh: <kbd>Ctrl + F5</kbd></li>
+            <li>Clear browser cache</li>
+            <li>Coba incognito mode</li>
+            <li>Check console untuk error</li>
+        </ul>
+    </div>
+
+    <script>
+        document.getElementById('ua').textContent = navigator.userAgent;
+        document.getElementById('url').textContent = window.location.href;
+        document.getElementById('base').textContent = window.location.origin;
+        
+        // Log ke console
+        console.log('Testing image paths...');
+        console.log('Base URL:', window.location.origin);
+        console.log('Storage path:', window.location.origin + '/storage/gallery/');
+    </script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+# ========================================
+# TAMBAHKAN INI KE FILE .env ANDA
+# ========================================
+
+# reCAPTCHA Configuration
+# Skip CAPTCHA di local development
+RECAPTCHA_SKIP_LOCAL=true
+RECAPTCHA_SITE_KEY=
+RECAPTCHA_SECRET_KEY=
+RECAPTCHA_VERSION=v2
+
+# ========================================
+# CARA MENAMBAHKAN:
+# ========================================
+# 1. Buka file .env di root project
+# 2. Scroll ke bawah
+# 3. Copy paste 4 baris di atas
+# 4. Save file
+# 5. Jalankan: php artisan config:clear
+# 6. Restart server
+# ========================================

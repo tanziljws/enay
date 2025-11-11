@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Gambar Berita</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-section h2 {
+            color: #3498db;
+            margin-top: 0;
+        }
+        .image-test {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f9f9f9;
+            border-left: 4px solid #3498db;
+        }
+        .image-test img {
+            max-width: 300px;
+            height: auto;
+            border: 2px solid #ddd;
+            margin: 10px 0;
+        }
+        .status {
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🖼️ Test Gambar Berita</h1>
+        <p>Halaman ini untuk test apakah gambar berita bisa diakses.</p>
+
+        <div class="test-section">
+            <h2>Test 1: Direct URL</h2>
+            <div class="image-test">
+                <p><strong>URL:</strong> <code>/storage/news/0IcNcDgkv8VZsY38Nep1yp68Fa3G7sEIHcklgATR.jpg</code></p>
+                <img src="/storage/news/0IcNcDgkv8VZsY38Nep1yp68Fa3G7sEIHcklgATR.jpg" 
+                     alt="Test Image 1"
+                     onerror="this.parentElement.innerHTML += '<p class=\'status error\'>❌ GAGAL: Gambar tidak bisa dimuat</p>';"
+                     onload="this.parentElement.innerHTML += '<p class=\'status success\'>✅ BERHASIL: Gambar berhasil dimuat</p>';">
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>Test 2: Gambar Lain</h2>
+            <div class="image-test">
+                <p><strong>URL:</strong> <code>/storage/news/cX4xUBvJrGdYtAK5nEUu9kdPhQiC7GlATofCw2qu.jpg</code></p>
+                <img src="/storage/news/cX4xUBvJrGdYtAK5nEUu9kdPhQiC7GlATofCw2qu.jpg" 
+                     alt="Test Image 2"
+                     onerror="this.parentElement.innerHTML += '<p class=\'status error\'>❌ GAGAL: Gambar tidak bisa dimuat</p>';"
+                     onload="this.parentElement.innerHTML += '<p class=\'status success\'>✅ BERHASIL: Gambar berhasil dimuat</p>';">
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>Test 3: Semua Gambar Berita</h2>
+            <div id="all-images"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>📋 Troubleshooting</h2>
+            <p><strong>Jika gambar tidak muncul:</strong></p>
+            <ol>
+                <li>Cek console browser (F12) untuk error</li>
+                <li>Cek Network tab untuk HTTP status</li>
+                <li>Pastikan server running: <code>php artisan serve</code></li>
+                <li>Hard refresh: <code>Ctrl + Shift + R</code></li>
+                <li>Jalankan: <code>php artisan storage:link</code></li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        // List semua gambar yang ada
+        const images = [
+            '0IcNcDgkv8VZsY38Nep1yp68Fa3G7sEIHcklgATR.jpg',
+            '3zb1hZQkGhVJ2BKTjEJWZfG7YP886zUUrf5dpLWr.jpg',
+            '6IfaIVC5IbBfMKb53EI8WZKuG2VyMBJp1opOU8JU.jpg',
+            '7KsWF1RSVGcqPeCTiAYkWNhzn45KLW2M9bn8bspa.jpg',
+            'cX4xUBvJrGdYtAK5nEUu9kdPhQiC7GlATofCw2qu.jpg',
+            'dH46YNzO9Gdj3UQGXinEnhGgyxPay1KgnOcLP9d1.jpg',
+            'Dt6mBalUnbyxEZw7RwJXlPqI18Fj1fDrrLyADBEm.jpg',
+            'fT28wbObyUj4hRCYrg2twc9CjOVutcXs4OiDPFHo.jpg',
+            'gPdFmcWGRnS4pACoajkird5uj7oa77NI3v3bnkZU.jpg',
+            'ks4oMPlCASNQrEWaYUOBV69fASDQ1IR5dpjkKSwt.jpg'
+        ];
+
+        const container = document.getElementById('all-images');
+        images.forEach((img, index) => {
+            const div = document.createElement('div');
+            div.className = 'image-test';
+            div.innerHTML = `
+                <p><strong>Image ${index + 1}:</strong> <code>/storage/news/${img}</code></p>
+                <img src="/storage/news/${img}" 
+                     alt="News Image ${index + 1}"
+                     style="max-width: 200px;"
+                     onerror="this.parentElement.innerHTML += '<p class=\\'status error\\'>❌ GAGAL</p>';"
+                     onload="this.parentElement.innerHTML += '<p class=\\'status success\\'>✅ BERHASIL</p>';">
+            `;
+            container.appendChild(div);
+        });
+    </script>
+</body>
+</html>

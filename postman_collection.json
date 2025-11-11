@@ -1,0 +1,570 @@
+{
+	"info": {
+		"_postman_id": "galeri-sekolah-enay-api",
+		"name": "Galeri Sekolah Enay API",
+		"description": "Collection untuk testing API Galeri Sekolah Enay",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Public Endpoints",
+			"item": [
+				{
+					"name": "News",
+					"item": [
+						{
+							"name": "Get All News",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/news",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"news"
+									]
+								}
+							}
+						},
+						{
+							"name": "Get Latest News",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/news/latest?limit=5",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"news",
+										"latest"
+									],
+									"query": [
+										{
+											"key": "limit",
+											"value": "5"
+										}
+									]
+								}
+							}
+						},
+						{
+							"name": "Get News by ID",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/news/1",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"news",
+										"1"
+									]
+								}
+							}
+						},
+						{
+							"name": "Search News",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/news?search=matematika&category=academic",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"news"
+									],
+									"query": [
+										{
+											"key": "search",
+											"value": "matematika"
+										},
+										{
+											"key": "category",
+											"value": "academic"
+										}
+									]
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "Subjects",
+					"item": [
+						{
+							"name": "Get All Subjects",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/subjects",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"subjects"
+									]
+								}
+							}
+						},
+						{
+							"name": "Get Subject by ID",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/subjects/1",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"subjects",
+										"1"
+									]
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "Class Rooms",
+					"item": [
+						{
+							"name": "Get All Class Rooms",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/class-rooms",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"class-rooms"
+									]
+								}
+							}
+						},
+						{
+							"name": "Get Class Room by ID",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/class-rooms/1",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"class-rooms",
+										"1"
+									]
+								}
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Protected Endpoints",
+			"item": [
+				{
+					"name": "Students",
+					"item": [
+						{
+							"name": "Get All Students",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/students",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"students"
+									]
+								}
+							}
+						},
+						{
+							"name": "Get Students with Filter",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/students?class_room_id=1&status=active&search=andi",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"students"
+									],
+									"query": [
+										{
+											"key": "class_room_id",
+											"value": "1"
+										},
+										{
+											"key": "status",
+											"value": "active"
+										},
+										{
+											"key": "search",
+											"value": "andi"
+										}
+									]
+								}
+							}
+						},
+						{
+							"name": "Create Student",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"student_number\": \"S003\",\n    \"name\": \"Budi Santoso\",\n    \"email\": \"budi.santoso@student.sekolah-enay.ac.id\",\n    \"phone\": \"081234567005\",\n    \"date_of_birth\": \"2007-05-10\",\n    \"gender\": \"male\",\n    \"address\": \"Jl. Pondok Indah No. 3, Jakarta\",\n    \"parent_name\": \"Ahmad Santoso\",\n    \"parent_phone\": \"081234567105\",\n    \"class_room_id\": 1,\n    \"status\": \"active\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/students",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"students"
+									]
+								}
+							}
+						},
+						{
+							"name": "Get Student by ID",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/students/1",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"students",
+										"1"
+									]
+								}
+							}
+						},
+						{
+							"name": "Update Student",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"Andi Pratama Updated\",\n    \"phone\": \"081234567999\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/students/1",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"students",
+										"1"
+									]
+								}
+							}
+						},
+						{
+							"name": "Delete Student",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/students/1",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"students",
+										"1"
+									]
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "Teachers",
+					"item": [
+						{
+							"name": "Get All Teachers",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/teachers",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"teachers"
+									]
+								}
+							}
+						},
+						{
+							"name": "Create Teacher",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"teacher_number\": \"T003\",\n    \"name\": \"John Smith, M.A\",\n    \"email\": \"john.smith@sekolah-enay.ac.id\",\n    \"phone\": \"081234567892\",\n    \"date_of_birth\": \"1982-07-10\",\n    \"gender\": \"male\",\n    \"address\": \"Jl. Thamrin No. 789, Jakarta\",\n    \"qualification\": \"S2 English Literature\",\n    \"specialization\": \"Bahasa Inggris\",\n    \"join_date\": \"2011-09-01\",\n    \"status\": \"active\",\n    \"subjects\": [3]\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/teachers",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"teachers"
+									]
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "Grades",
+					"item": [
+						{
+							"name": "Get All Grades",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/grades",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"grades"
+									]
+								}
+							}
+						},
+						{
+							"name": "Create Grade",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"student_id\": 1,\n    \"subject_id\": 1,\n    \"teacher_id\": 1,\n    \"score\": 85.50,\n    \"grade_letter\": \"B+\",\n    \"notes\": \"Nilai bagus\",\n    \"exam_date\": \"2024-01-15\",\n    \"semester\": \"1\",\n    \"academic_year\": 2024\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/grades",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"grades"
+									]
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "Attendance",
+					"item": [
+						{
+							"name": "Get All Attendance",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/attendances",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"attendances"
+									]
+								}
+							}
+						},
+						{
+							"name": "Create Attendance",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"student_id\": 1,\n    \"class_room_id\": 1,\n    \"date\": \"2024-01-15\",\n    \"status\": \"present\",\n    \"notes\": null,\n    \"check_in_time\": \"07:00:00\",\n    \"check_out_time\": \"15:00:00\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/attendances",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"attendances"
+									]
+								}
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Admin Endpoints",
+			"item": [
+				{
+					"name": "Dashboard Stats",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/dashboard/stats",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"dashboard",
+								"stats"
+							]
+						}
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000/api/v1",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "your-auth-token-here",
+			"type": "string"
+		}
+	]
+}
