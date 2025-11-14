@@ -4,11 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\GalleryReaction;
-use App\Models\GalleryUserComment;
 use App\Models\NewsReaction;
-use App\Models\NewsUserComment;
 use App\Models\TeacherReaction;
-use App\Models\TeacherComment;
 use App\Models\Download;
 use Illuminate\Http\Request;
 
@@ -23,13 +20,13 @@ class InteractionAdminController extends Controller
         $stats = [
             'total_gallery_likes' => GalleryReaction::where('type', 'like')->count(),
             'total_gallery_dislikes' => GalleryReaction::where('type', 'dislike')->count(),
-            'total_gallery_comments' => GalleryUserComment::count(),
+            'total_gallery_comments' => \App\Models\Comment::where('commentable_type', 'App\\Models\\GalleryItem')->count(),
             'total_news_likes' => NewsReaction::where('type', 'like')->count(),
             'total_news_dislikes' => NewsReaction::where('type', 'dislike')->count(),
-            'total_news_comments' => NewsUserComment::count(),
+            'total_news_comments' => \App\Models\Comment::where('commentable_type', 'App\\Models\\News')->count(),
             'total_teacher_likes' => TeacherReaction::where('type', 'like')->count(),
             'total_teacher_dislikes' => TeacherReaction::where('type', 'dislike')->count(),
-            'total_teacher_comments' => TeacherComment::count(),
+            'total_teacher_comments' => \App\Models\Comment::where('commentable_type', 'App\\Models\\Teacher')->count(),
             'total_downloads' => Download::count(),
             'total_users' => \App\Models\User::where('role', 'user')->count(),
         ];
@@ -39,29 +36,32 @@ class InteractionAdminController extends Controller
         $weeklyStats = [
             'gallery_likes' => GalleryReaction::where('type', 'like')->where('created_at', '>=', $weekAgo)->count(),
             'gallery_dislikes' => GalleryReaction::where('type', 'dislike')->where('created_at', '>=', $weekAgo)->count(),
-            'gallery_comments' => GalleryUserComment::where('created_at', '>=', $weekAgo)->count(),
+            'gallery_comments' => \App\Models\Comment::where('commentable_type', 'App\\Models\\GalleryItem')->where('created_at', '>=', $weekAgo)->count(),
             'news_likes' => NewsReaction::where('type', 'like')->where('created_at', '>=', $weekAgo)->count(),
             'news_dislikes' => NewsReaction::where('type', 'dislike')->where('created_at', '>=', $weekAgo)->count(),
-            'news_comments' => NewsUserComment::where('created_at', '>=', $weekAgo)->count(),
+            'news_comments' => \App\Models\Comment::where('commentable_type', 'App\\Models\\News')->where('created_at', '>=', $weekAgo)->count(),
             'teacher_likes' => TeacherReaction::where('type', 'like')->where('created_at', '>=', $weekAgo)->count(),
             'teacher_dislikes' => TeacherReaction::where('type', 'dislike')->where('created_at', '>=', $weekAgo)->count(),
-            'teacher_comments' => TeacherComment::where('created_at', '>=', $weekAgo)->count(),
+            'teacher_comments' => \App\Models\Comment::where('commentable_type', 'App\\Models\\Teacher')->where('created_at', '>=', $weekAgo)->count(),
             'downloads' => Download::where('created_at', '>=', $weekAgo)->count(),
             'new_users' => \App\Models\User::where('role', 'user')->where('created_at', '>=', $weekAgo)->count(),
         ];
         
         // Recent comments
-        $recentGalleryComments = GalleryUserComment::with(['user', 'galleryItem'])
+        $recentGalleryComments = \App\Models\Comment::where('commentable_type', 'App\\Models\\GalleryItem')
+            ->with(['user', 'commentable'])
             ->orderBy('created_at', 'desc')
             ->take(10)
             ->get();
             
-        $recentNewsComments = NewsUserComment::with(['user', 'news'])
+        $recentNewsComments = \App\Models\Comment::where('commentable_type', 'App\\Models\\News')
+            ->with(['user', 'commentable'])
             ->orderBy('created_at', 'desc')
             ->take(10)
             ->get();
             
-        $recentTeacherComments = TeacherComment::with(['user', 'teacher'])
+        $recentTeacherComments = \App\Models\Comment::where('commentable_type', 'App\\Models\\Teacher')
+            ->with(['user', 'commentable'])
             ->orderBy('created_at', 'desc')
             ->take(10)
             ->get();
@@ -84,7 +84,8 @@ class InteractionAdminController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(20);
             
-        $comments = GalleryUserComment::with(['user', 'galleryItem'])
+        $comments = \App\Models\Comment::where('commentable_type', 'App\\Models\\GalleryItem')
+            ->with(['user', 'commentable'])
             ->orderBy('created_at', 'desc')
             ->paginate(20);
         
@@ -100,7 +101,8 @@ class InteractionAdminController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(20);
             
-        $comments = NewsUserComment::with(['user', 'news'])
+        $comments = \App\Models\Comment::where('commentable_type', 'App\\Models\\News')
+            ->with(['user', 'commentable'])
             ->orderBy('created_at', 'desc')
             ->paginate(20);
         
@@ -116,7 +118,8 @@ class InteractionAdminController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(20);
             
-        $comments = TeacherComment::with(['user', 'teacher'])
+        $comments = \App\Models\Comment::where('commentable_type', 'App\\Models\\Teacher')
+            ->with(['user', 'commentable'])
             ->orderBy('created_at', 'desc')
             ->paginate(20);
         
@@ -140,7 +143,8 @@ class InteractionAdminController extends Controller
      */
     public function deleteGalleryComment($id)
     {
-        $comment = GalleryUserComment::findOrFail($id);
+        $comment = \App\Models\Comment::where('commentable_type', 'App\\Models\\GalleryItem')
+            ->findOrFail($id);
         $comment->delete();
         
         return back()->with('success', 'Komentar berhasil dihapus');
@@ -151,7 +155,8 @@ class InteractionAdminController extends Controller
      */
     public function deleteNewsComment($id)
     {
-        $comment = NewsUserComment::findOrFail($id);
+        $comment = \App\Models\Comment::where('commentable_type', 'App\\Models\\News')
+            ->findOrFail($id);
         $comment->delete();
         
         return back()->with('success', 'Komentar berhasil dihapus');
@@ -162,7 +167,8 @@ class InteractionAdminController extends Controller
      */
     public function deleteTeacherComment($id)
     {
-        $comment = TeacherComment::findOrFail($id);
+        $comment = \App\Models\Comment::where('commentable_type', 'App\\Models\\Teacher')
+            ->findOrFail($id);
         $comment->delete();
         
         return back()->with('success', 'Komentar berhasil dihapus');

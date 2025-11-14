@@ -20,9 +20,20 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
-        if (Auth::attempt($credentials, $request->boolean('remember'))) {
-            $request->session()->regenerate();
-            return redirect()->intended(route('admin.dashboard'));
+        // Check if user exists and is admin
+        $user = \App\Models\User::where('email', $credentials['email'])->first();
+        
+        if ($user) {
+            if ($user->role !== 'admin') {
+                return back()->withErrors([
+                    'email' => 'Akun ini bukan akun admin. Silakan gunakan halaman login user.',
+                ])->onlyInput('email');
+            }
+            
+            if (Auth::attempt($credentials, $request->boolean('remember'))) {
+                $request->session()->regenerate();
+                return redirect()->intended(route('admin.dashboard'));
+            }
         }
 
         return back()->withErrors([

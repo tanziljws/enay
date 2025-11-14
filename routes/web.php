@@ -17,10 +17,13 @@ use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\UserAuthController;
 use App\Http\Controllers\UserInteractionController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\CaptchaController;
+use App\Http\Controllers\Admin\DashboardController;
 
 Route::get('/', function () {
     $latestNews = \App\Models\News::where('status', 'published')
         ->orderBy('published_at', 'desc')
+        ->orderBy('created_at', 'desc')
         ->limit(3)
         ->get();
     return view('home', compact('latestNews'));
@@ -33,6 +36,7 @@ Route::get('/about', function () {
 Route::get('/news', function () {
     $news = \App\Models\News::where('status', 'published')
         ->orderBy('published_at', 'desc')
+        ->orderBy('created_at', 'desc')
         ->paginate(10);
     return view('news', compact('news'));
 });
@@ -53,71 +57,123 @@ Route::get('/jurusan', function () {
 
 Route::get('/galeri', function () {
     $items = \App\Models\GalleryItem::where('status','published')
-        ->orderByDesc('taken_at')
-        ->orderByDesc('created_at')
+        ->orderBy('taken_at', 'desc')
+        ->orderBy('created_at', 'desc')
         ->paginate(12);
-    
-    // Load reactions and comments count for each item
-    foreach ($items as $item) {
-        $item->likes_count = \App\Models\GalleryReaction::where('gallery_item_id', $item->id)->where('type', 'like')->count();
-        $item->dislikes_count = \App\Models\GalleryReaction::where('gallery_item_id', $item->id)->where('type', 'dislike')->count();
-        $item->comments_count = \App\Models\GalleryUserComment::where('gallery_item_id', $item->id)->count();
         
-        // Get user's reaction if authenticated
-        if (auth()->check()) {
-            $userReaction = \App\Models\GalleryReaction::where('gallery_item_id', $item->id)
-                ->where('user_id', auth()->id())
-                ->first();
-            $item->user_reaction = $userReaction ? $userReaction->type : null;
-        } else {
-            $item->user_reaction = null;
+    // Sync storage to public for Windows
+    if (app()->environment('local')) {
+        $source = storage_path('app/public/gallery');
+        $destination = public_path('storage/gallery');
+        
+        if (!file_exists($destination)) {
+            mkdir($destination, 0755, true);
+        }
+        
+        if (file_exists($source)) {
+            foreach (glob($source . '/*') as $file) {
+                $destFile = $destination . '/' . basename($file);
+                if (!file_exists($destFile)) {
+                    copy($file, $destFile);
+                }
+            }
         }
     }
     
     return view('galeri', compact('items'));
 });
 
+// CAPTCHA routes for download modal
+Route::get('/captcha/generate', [CaptchaController::class, 'generate'])->name('captcha.generate');
+Route::post('/captcha/verify', [CaptchaController::class, 'verify'])->name('captcha.verify');
+
 // Teachers routes
 Route::get('/teachers', [TeacherController::class, 'index'])->name('teachers.index');
 Route::get('/teachers/{id}', [TeacherController::class, 'show'])->name('teachers.show');
 
-// Halaman kelas dinonaktifkan sesuai permintaan
+// Authentication Routes
+Route::get('/login', [UserAuthController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [UserAuthController::class, 'login'])->name('login.post');
+Route::post('/logout', [UserAuthController::class, 'logout'])->name('logout');
+Route::get('/register', [UserAuthController::class, 'showRegisterForm'])->name('register');
+Route::post('/register', [UserAuthController::class, 'register'])->name('register.post');
 
-// CAPTCHA Routes
-Route::get('/captcha/generate', [\App\Http\Controllers\CaptchaController::class, 'generate'])->name('captcha.generate');
-Route::post('/captcha/verify', [\App\Http\Controllers\CaptchaController::class, 'verify'])->name('captcha.verify');
-
-// User Authentication Routes
-Route::middleware('guest')->group(function () {
-    Route::get('/register', [UserAuthController::class, 'showRegisterForm'])->name('register');
-    Route::post('/register', [UserAuthController::class, 'register'])->name('register.post');
-    Route::get('/login', [UserAuthController::class, 'showLoginForm'])->name('login');
-    Route::post('/login', [UserAuthController::class, 'login'])->name('login.post');
-});
-
-Route::post('/logout', [UserAuthController::class, 'logout'])->middleware('auth')->name('logout');
-
-// Admin - User Interactions Management
-Route::prefix('admin')->middleware(['auth'])->group(function () {
-    Route::get('/interactions', [\App\Http\Controllers\Admin\InteractionAdminController::class, 'dashboard'])->name('admin.interactions.dashboard');
-    Route::get('/interactions/gallery', [\App\Http\Controllers\Admin\InteractionAdminController::class, 'galleryInteractions'])->name('admin.interactions.gallery');
-    Route::get('/interactions/news', [\App\Http\Controllers\Admin\InteractionAdminController::class, 'newsInteractions'])->name('admin.interactions.news');
-    Route::get('/interactions/teachers', [\App\Http\Controllers\Admin\InteractionAdminController::class, 'teacherInteractions'])->name('admin.interactions.teachers');
-    Route::get('/interactions/downloads', [\App\Http\Controllers\Admin\InteractionAdminController::class, 'downloads'])->name('admin.interactions.downloads');
-    
-    // Delete comments
-    Route::delete('/interactions/gallery/comment/{id}', [\App\Http\Controllers\Admin\InteractionAdminController::class, 'deleteGalleryComment'])->name('admin.interactions.gallery.comment.delete');
-    Route::delete('/interactions/news/comment/{id}', [\App\Http\Controllers\Admin\InteractionAdminController::class, 'deleteNewsComment'])->name('admin.interactions.news.comment.delete');
-    Route::delete('/interactions/teacher/comment/{id}', [\App\Http\Controllers\Admin\InteractionAdminController::class, 'deleteTeacherComment'])->name('admin.interactions.teacher.comment.delete');
-});
-
-// User Interaction Routes (requires authentication)
+// Profile
 Route::middleware('auth')->group(function () {
-    // User Profile
-    Route::get('/profile', [\App\Http\Controllers\UserProfileController::class, 'show'])->name('profile.show');
-    Route::get('/profile/edit', [\App\Http\Controllers\UserProfileController::class, 'edit'])->name('profile.edit');
-    Route::put('/profile', [\App\Http\Controllers\UserProfileController::class, 'update'])->name('profile.update');
+    Route::get('/profile', [UserAuthController::class, 'showProfile'])->name('profile.show');
+    Route::put('/profile', [UserAuthController::class, 'updateProfile'])->name('profile.update');
+});
+
+// Admin Authentication
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+});
+
+// Admin routes
+Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
+    // News management
+    Route::resource('news', NewsAdminController::class);
+    
+    // Gallery management
+    // Custom routes must come BEFORE the resource so /admin/gallery/statistics
+    // tidak tertangkap sebagai gallery/{gallery} (show)
+    Route::get('/gallery/statistics', [GalleryAdminController::class, 'statistics'])->name('gallery.statistics');
+    Route::get('/gallery/print-report', [GalleryAdminController::class, 'printReport'])->name('gallery.print-report');
+    Route::resource('gallery', GalleryAdminController::class);
+    
+    // Student management
+    Route::resource('students', StudentAdminController::class);
+    
+    // Teacher management
+    Route::resource('teachers', TeacherAdminController::class);
+    
+    // Major management
+    Route::resource('majors', MajorAdminController::class);
+    
+    // Activity management
+    Route::resource('activities', ActivityAdminController::class);
+    
+    // Comments management
+    Route::get('/comments', [\App\Http\Controllers\Admin\CommentManagementController::class, 'index'])->name('comments.index');
+    Route::delete('/comments/{id}', [\App\Http\Controllers\Admin\CommentManagementController::class, 'destroy'])->name('comments.destroy');
+    Route::post('/comments/bulk-delete', [\App\Http\Controllers\Admin\CommentManagementController::class, 'bulkDelete'])->name('comments.bulk-delete');
+        
+    // Interactions dashboard & detail pages
+    Route::get('/interactions', [\App\Http\Controllers\Admin\InteractionAdminController::class, 'dashboard'])->name('interactions.dashboard');
+    Route::get('/interactions/gallery', [\App\Http\Controllers\Admin\InteractionAdminController::class, 'galleryInteractions'])->name('interactions.gallery');
+    Route::get('/interactions/news', [\App\Http\Controllers\Admin\InteractionAdminController::class, 'newsInteractions'])->name('interactions.news');
+    Route::get('/interactions/teachers', [\App\Http\Controllers\Admin\InteractionAdminController::class, 'teacherInteractions'])->name('interactions.teachers');
+    Route::get('/interactions/downloads', [\App\Http\Controllers\Admin\InteractionAdminController::class, 'downloads'])->name('interactions.downloads');
+    Route::delete('/interactions/gallery/comment/{id}', [\App\Http\Controllers\Admin\InteractionAdminController::class, 'deleteGalleryComment'])->name('interactions.gallery.comment.delete');
+    Route::delete('/interactions/teacher/comment/{id}', [\App\Http\Controllers\Admin\InteractionAdminController::class, 'deleteTeacherComment'])->name('interactions.teacher.comment.delete');
+    
+    // Pages management
+    Route::get('/pages', [\App\Http\Controllers\Admin\PageAdminController::class, 'index'])->name('pages.index');
+    Route::get('/pages/create', [\App\Http\Controllers\Admin\PageAdminController::class, 'create'])->name('pages.create');
+    Route::post('/pages', [\App\Http\Controllers\Admin\PageAdminController::class, 'store'])->name('pages.store');
+    Route::get('/pages/{page}/edit', [\App\Http\Controllers\Admin\PageAdminController::class, 'edit'])->name('pages.edit');
+    Route::put('/pages/{page}', [\App\Http\Controllers\Admin\PageAdminController::class, 'update'])->name('pages.update');
+    Route::delete('/pages/{page}', [\App\Http\Controllers\Admin\PageAdminController::class, 'destroy'])->name('pages.destroy');
+    
+    // Home page
+    Route::get('/pages/home', [\App\Http\Controllers\Admin\PageAdminController::class, 'editHome'])->name('pages.home.edit');
+    Route::put('/pages/home', [\App\Http\Controllers\Admin\PageAdminController::class, 'updateHome'])->name('pages.home.update');
+    
+    // About page
+    Route::get('/pages/about', [\App\Http\Controllers\Admin\PageAdminController::class, 'editAbout'])->name('pages.about.edit');
+    Route::put('/pages/about', [\App\Http\Controllers\Admin\PageAdminController::class, 'updateAbout'])->name('pages.about.update');
+    
+    // Contact page
+    Route::get('/pages/contact', [\App\Http\Controllers\Admin\PageAdminController::class, 'editContact'])->name('pages.contact.edit');
+    Route::put('/pages/contact', [\App\Http\Controllers\Admin\PageAdminController::class, 'updateContact'])->name('pages.contact.update');
+});
+
+// User interaction routes (like, comment, download)
+Route::middleware('auth')->group(function () {
     // Gallery interactions
     Route::post('/gallery/{id}/reaction', [UserInteractionController::class, 'toggleGalleryReaction'])->name('gallery.reaction');
     Route::post('/gallery/{id}/comment', [UserInteractionController::class, 'addGalleryComment'])->name('gallery.comment');
@@ -137,56 +193,4 @@ Route::middleware('auth')->group(function () {
     Route::post('/teacher/{id}/comment', [UserInteractionController::class, 'addTeacherComment'])->name('teacher.comment');
     Route::get('/teacher/{id}/comments', [UserInteractionController::class, 'getTeacherComments'])->name('teacher.comments');
     Route::delete('/teacher/comment/{id}', [UserInteractionController::class, 'deleteTeacherComment'])->name('teacher.comment.delete');
-});
-
-// Admin auth
-Route::middleware('guest')->group(function () {
-    Route::get('/admin/login', [AuthController::class, 'showLoginForm'])->name('admin.login');
-    Route::post('/admin/login', [AuthController::class, 'login'])->name('admin.login.post');
-});
-
-Route::post('/admin/logout', [AuthController::class, 'logout'])->middleware('auth')->name('admin.logout');
-
-Route::middleware('auth')->group(function () {
-    Route::get('/admin', function () {
-        return view('admin.dashboard');
-    })->name('admin.dashboard');
-    
-    // Comment Management
-    Route::get('/admin/comments', [\App\Http\Controllers\Admin\CommentManagementController::class, 'index'])->name('admin.comments.index');
-    Route::delete('/admin/comments/{id}', [\App\Http\Controllers\Admin\CommentManagementController::class, 'destroy'])->name('admin.comments.destroy');
-    Route::delete('/admin/comments-bulk', [\App\Http\Controllers\Admin\CommentManagementController::class, 'bulkDelete'])->name('admin.comments.bulk-delete');
-
-    // Admin News CRUD
-    Route::resource('/admin/news', NewsAdminController::class)->except(['show'])->names('admin.news');
-
-    // Admin Gallery CRUD
-    Route::resource('/admin/gallery', GalleryAdminController::class)->except(['show'])->parameters([
-        'gallery' => 'gallery'
-    ])->names('admin.gallery');
-
-    // Admin Students & Teachers CRUD
-    Route::resource('/admin/students', StudentAdminController::class)->except(['show'])->names('admin.students');
-    Route::resource('/admin/teachers', TeacherAdminController::class)->except(['show'])->names('admin.teachers');
-
-    // Admin Attendance Photos
-    Route::resource('/admin/attendance-photos', AttendancePhotoAdminController::class)->only(['index','create','store','destroy'])->parameter('attendance-photos','attendance')->names('admin.attendance');
-
-    // Admin Majors CRUD
-    Route::resource('/admin/majors', MajorAdminController::class)->names('admin.majors');
-
-    // Admin Activities CRUD
-    Route::resource('/admin/activities', ActivityAdminController::class)->names('admin.activities');
-
-    // Admin Comments Management
-    Route::get('/admin/comments/news', [CommentAdminController::class, 'newsComments'])->name('admin.comments.news');
-    Route::post('/admin/comments/news/{id}/approve', [CommentAdminController::class, 'approveNewsComment'])->name('admin.comments.news.approve');
-    Route::delete('/admin/comments/news/{id}', [CommentAdminController::class, 'deleteNewsComment'])->name('admin.comments.news.delete');
-    
-    Route::get('/admin/comments/gallery', [CommentAdminController::class, 'galleryComments'])->name('admin.comments.gallery');
-    Route::post('/admin/comments/gallery/{id}/approve', [CommentAdminController::class, 'approveGalleryComment'])->name('admin.comments.gallery.approve');
-    Route::delete('/admin/comments/gallery/{id}', [CommentAdminController::class, 'deleteGalleryComment'])->name('admin.comments.gallery.delete');
-
-    // Admin Statistics
-    Route::get('/admin/statistics', [CommentAdminController::class, 'statistics'])->name('admin.statistics');
 });

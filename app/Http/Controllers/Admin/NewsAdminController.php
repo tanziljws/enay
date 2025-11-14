@@ -7,6 +7,8 @@ use App\Models\News;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\File;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class NewsAdminController extends Controller
 {
@@ -31,9 +33,10 @@ class NewsAdminController extends Controller
             }
         }
     }
+    
     public function index()
     {
-        $news = News::orderByDesc('published_at')->paginate(10);
+        $news = News::orderByDesc('published_at')->orderByDesc('created_at')->paginate(10);
         return view('admin.news.index', compact('news'));
     }
 
@@ -47,27 +50,26 @@ class NewsAdminController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'required|string',
-            'author' => 'required|string|max:255',
             'category' => 'required|in:academic,sports,events,announcements,general',
-            'status' => 'required|in:draft,published,archived',
-            'image' => 'nullable|image|max:10240',
-            'published_at' => 'nullable|date',
+            'status' => 'required|in:draft,published',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
 
+        // Ensure published_at is set
+        if ($validated['status'] === 'published' && empty($validated['published_at'])) {
+            $validated['published_at'] = Carbon::now();
+        }
+
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('news', 'public');
-            $validated['image'] = $path;
-            
-            // Auto-sync to public folder
+            $imagePath = $request->file('image')->store('news', 'public');
+            $validated['image'] = $imagePath;
             $this->syncStorageToPublic('news');
         }
 
-        if (($validated['status'] ?? null) === 'published' && empty($validated['published_at'])) {
-            $validated['published_at'] = now();
-        }
+        $validated['author'] = Auth::check() ? Auth::user()->name : 'Admin';
+        $news = News::create($validated);
 
-        News::create($validated);
-        return redirect()->route('admin.news.index')->with('success', 'News created');
+        return redirect()->route('admin.news.index')->with('success', 'Berita berhasil ditambahkan.');
     }
 
     public function edit(News $news)
@@ -78,36 +80,48 @@ class NewsAdminController extends Controller
     public function update(Request $request, News $news)
     {
         $validated = $request->validate([
-            'title' => 'sometimes|required|string|max:255',
-            'content' => 'sometimes|required|string',
-            'author' => 'sometimes|required|string|max:255',
-            'category' => 'sometimes|required|in:academic,sports,events,announcements,general',
-            'status' => 'sometimes|required|in:draft,published,archived',
-            'image' => 'nullable|image|max:10240',
-            'published_at' => 'nullable|date',
+            'title' => 'required|string|max:255',
+            'content' => 'required|string',
+            'category' => 'required|in:academic,sports,events,announcements,general',
+            'status' => 'required|in:draft,published',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
 
+        // Ensure published_at is set when publishing
+        if ($validated['status'] === 'published' && empty($news->published_at)) {
+            $validated['published_at'] = Carbon::now();
+        }
+
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('news', 'public');
-            $validated['image'] = $path;
+            // Delete old image if exists
+            if ($news->image) {
+                $oldImagePath = storage_path('app/public/' . $news->image);
+                if (File::exists($oldImagePath)) {
+                    File::delete($oldImagePath);
+                }
+            }
             
-            // Auto-sync to public folder
+            $imagePath = $request->file('image')->store('news', 'public');
+            $validated['image'] = $imagePath;
             $this->syncStorageToPublic('news');
         }
 
-        if (($validated['status'] ?? null) === 'published' && empty($validated['published_at'])) {
-            $validated['published_at'] = now();
-        }
-
         $news->update($validated);
-        return redirect()->route('admin.news.index')->with('success', 'News updated');
+
+        return redirect()->route('admin.news.index')->with('success', 'Berita berhasil diperbarui.');
     }
 
     public function destroy(News $news)
     {
+        if ($news->image) {
+            $imagePath = storage_path('app/public/' . $news->image);
+            if (File::exists($imagePath)) {
+                File::delete($imagePath);
+            }
+        }
+
         $news->delete();
-        return redirect()->route('admin.news.index')->with('success', 'News deleted');
+
+        return redirect()->route('admin.news.index')->with('success', 'Berita berhasil dihapus.');
     }
 }
-
-

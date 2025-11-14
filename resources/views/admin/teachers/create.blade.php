@@ -27,8 +27,8 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label for="gender" class="form-label">Jenis Kelamin</label>
-                            <select class="form-select @error('gender') is-invalid @enderror" id="gender" name="gender">
+                            <label for="gender" class="form-label">Jenis Kelamin <span class="text-danger">*</span></label>
+                            <select class="form-select @error('gender') is-invalid @enderror" id="gender" name="gender" required>
                                 <option value="">Pilih Jenis Kelamin</option>
                                 <option value="male" {{ old('gender') == 'male' ? 'selected' : '' }}>Laki-laki</option>
                                 <option value="female" {{ old('gender') == 'female' ? 'selected' : '' }}>Perempuan</option>

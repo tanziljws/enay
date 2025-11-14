@@ -185,7 +185,7 @@
                         <div class="mb-3 pb-3 border-bottom">
                             <strong>{{ $comment->user->name }}</strong>
                             <br>
-                            <small class="text-muted">{{ $comment->galleryItem->title ?? 'N/A' }}</small>
+                            <small class="text-muted">{{ $comment->commentable->title ?? 'N/A' }}</small>
                             <p class="mb-1">{{ $comment->comment }}</p>
                             <small class="text-muted">{{ $comment->created_at->diffForHumans() }}</small>
                         </div>
@@ -207,7 +207,7 @@
                         <div class="mb-3 pb-3 border-bottom">
                             <strong>{{ $comment->user->name }}</strong>
                             <br>
-                            <small class="text-muted">{{ $comment->news->title ?? 'N/A' }}</small>
+                            <small class="text-muted">{{ $comment->commentable->title ?? 'N/A' }}</small>
                             <p class="mb-1">{{ $comment->comment }}</p>
                             <small class="text-muted">{{ $comment->created_at->diffForHumans() }}</small>
                         </div>
@@ -229,7 +229,7 @@
                         <div class="mb-3 pb-3 border-bottom">
                             <strong>{{ $comment->user->name }}</strong>
                             <br>
-                            <small class="text-muted">{{ $comment->teacher->name ?? 'N/A' }}</small>
+                            <small class="text-muted">{{ $comment->commentable->name ?? 'N/A' }}</small>
                             <p class="mb-1">{{ $comment->comment }}</p>
                             <small class="text-muted">{{ $comment->created_at->diffForHumans() }}</small>
                         </div>

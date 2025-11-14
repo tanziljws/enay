@@ -39,6 +39,20 @@
             <div class="card h-100">
                 <div class="card-body">
                     <h5 class="card-title" style="color: #3d4f5d;">
+                        <i class="fas fa-chart-bar"></i> Statistik Galeri
+                    </h5>
+                    <p class="card-text">Lihat statistik interaksi pengguna pada foto galeri.</p>
+                    <a href="{{ route('admin.gallery.statistics') }}" class="btn btn-primary">Buka</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mt-2">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title" style="color: #3d4f5d;">
                         <i class="fas fa-graduation-cap"></i> Program Keahlian
                     </h5>
                     <p class="card-text">Kelola program keahlian/jurusan sekolah.</p>
@@ -46,9 +60,6 @@
                 </div>
             </div>
         </div>
-    </div>
-
-    <div class="row g-4 mt-2">
         <div class="col-md-4">
             <div class="card h-100">
                 <div class="card-body">
@@ -71,7 +82,9 @@
                 </div>
             </div>
         </div>
-        
+    </div>
+    
+    <div class="row g-4 mt-2">
         <div class="col-md-4">
             <div class="card h-100">
                 <div class="card-body">
@@ -86,5 +99,3 @@
     </div>
 </div>
 @endsection
-
-

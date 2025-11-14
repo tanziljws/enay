@@ -49,7 +49,6 @@
     <!-- Bulk Actions -->
     <form id="bulkDeleteForm" action="{{ route('admin.comments.bulk-delete') }}" method="POST">
         @csrf
-        @method('DELETE')
         
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">

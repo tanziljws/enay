@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Beranda - Website SMK NEGERI 4 BOGOR')
+@section('title', 'Beranda - Galeri Sekolah')
 
 @section('content')
 <!-- Hero Section -->
@@ -8,16 +8,19 @@
     <div class="container">
         <div class="row align-items-center">
             <div class="col-lg-6">
-                <h1 class="display-4 fw-bold mb-4">Selamat Datang di SMK NEGERI 4 KOTA BOGOR</h1>
-                <p class="lead mb-4">Membangun generasi yang cerdas, berkarakter, dan berprestasi untuk masa depan yang gemilang.</p>
-                <div class="d-flex gap-3">
-                    <a href="{{ url('/about') }}" class="btn btn-light btn-lg">Pelajari Lebih Lanjut</a>
-                    <a href="{{ url('/news') }}" class="btn btn-outline-light btn-lg">Lihat Berita</a>
+                <h1 class="display-4 fw-bold">Selamat Datang di<br>SMK NEGERI 4 KOTA BOGOR</h1>
+                <p class="lead">Platform digital untuk dokumentasi kegiatan sekolah, berita terbaru, dan interaksi antara guru dan siswa.</p>
+                <div class="mt-4">
+                    <a href="{{ url('/galeri') }}" class="btn btn-primary btn-lg me-2">
+                        <i class="fas fa-images"></i> Lihat Galeri
+                    </a>
+                    <a href="{{ url('/news') }}" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-newspaper"></i> Berita Terbaru
+                    </a>
                 </div>
             </div>
-            <div class="col-lg-6">
-                <div class="text-center">
-                </div>
+            <div class="col-lg-6 text-center">
+                <img src="{{ asset('images/hero-illustration.svg') }}" alt="Illustration" class="img-fluid">
             </div>
         </div>
     </div>
@@ -25,30 +28,25 @@
 
 <!-- Stats Section -->
 <section class="py-5 bg-light">
-    <div class="container">
+    <div class="container-fluid">
         <div class="row" id="stats-container">
-            <div class="col-md-3">
+            <div class="col-12">
                 <div class="card stats-card">
-                    <div class="stats-number" id="total-students">-</div>
-                    <h5>Total Siswa</h5>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card stats-card">
-                    <div class="stats-number" id="total-teachers">-</div>
-                    <h5>Total Guru</h5>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card stats-card">
-                    <div class="stats-number" id="total-classes">-</div>
-                    <h5>Total Kelas</h5>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card stats-card">
-                    <div class="stats-number" id="total-subjects">-</div>
-                    <h5>Total Mata Pelajaran</h5>
+                    <div class="row g-0">
+                        <div class="col-md-4 d-flex align-items-center justify-content-center p-5">
+                            <div class="principal-photo-frame">
+                                <img src="{{ asset('images/principal.jpg.png') }}" alt="Kepala Sekolah" class="img-fluid" style="width: 300px; height: 350px; object-fit: cover; border-radius: 14px;">
+                            </div>
+                        </div>
+                        <div class="col-md-8 d-flex align-items-center">
+                            <div class="card-body text-center text-md-start py-4 w-100">
+                                <h2 class="card-title">Sambutan Kepala Sekolah SMK Negeri 4 Bogor</h2>
+                                <p class="card-text fs-5 fst-italic mb-4">"Pendidikan adalah fondasi utama dalam membentuk karakter bangsa yang unggul, berprestasi, dan berakhlak mulia. Melalui sinergi antara guru, siswa, dan orang tua, kita wujudkan generasi emas yang siap menghadapi tantangan global."</p>
+                                <p class="mb-2 fs-4"><strong>DRS. MULYAMURPRI HARTONO, M.SI</strong></p>
+                                <p class="text-muted fs-5 mb-0">Kepala Sekolah</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -85,7 +83,7 @@
                                             <p class="card-text">
                                                 <small class="text-muted">
                                                     <i class="fas fa-user me-1"></i>{{ $item->author }} | 
-                                                    <i class="fas fa-calendar me-1"></i>{{ $item->published_at->format('d M Y') }}
+                                                    <i class="fas fa-calendar me-1"></i>{{ $item->published_at ? $item->published_at->format('d M Y H:i') : $item->created_at->format('d M Y H:i') }}
                                                 </small>
                                             </p>
                                             <a href="/news/{{ $item->id }}" class="btn btn-primary btn-sm">Baca Selengkapnya</a>
@@ -106,67 +104,46 @@
     </div>
 </section>
 
-<!-- Features Section -->
-<section class="py-5 bg-light">
-    <div class="container">
-        <h2 class="text-center mb-5">Fitur Unggulan</h2>
-        <div class="row">
-            <div class="col-md-4">
-                <div class="card h-100">
-                    <div class="card-body text-center">
-                        <i class="fas fa-users fa-3x text-primary mb-3"></i>
-                        <h5 class="card-title">Manajemen Siswa</h5>
-                        <p class="card-text">Sistem manajemen siswa yang terintegrasi untuk memantau perkembangan akademik dan non-akademik.</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card h-100">
-                    <div class="card-body text-center">
-                        <i class="fas fa-chalkboard-teacher fa-3x text-primary mb-3"></i>
-                        <h5 class="card-title">Manajemen Guru</h5>
-                        <p class="card-text">Platform untuk mengelola data guru, jadwal mengajar, dan evaluasi kinerja.</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card h-100">
-                    <div class="card-body text-center">
-                        <i class="fas fa-chart-line fa-3x text-primary mb-3"></i>
-                        <h5 class="card-title">Laporan Akademik</h5>
-                        <p class="card-text">Sistem pelaporan yang komprehensif untuk memantau prestasi dan kehadiran siswa.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
+<style>
+    .principal-photo-frame {
+        padding: 10px;
+        border-radius: 22px;
+        background:
+            radial-gradient(circle at top left,  rgba(46, 64, 104, 0.4), transparent 55%),
+            radial-gradient(circle at bottom right, rgba(46, 64, 104, 0.6), transparent 60%),
+            linear-gradient(135deg, #0b1725, #1f3550); /* biru tua dengan sudut lebih pekat */
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+        position: relative;
+    }
+
+    .principal-photo-frame::before {
+        content: "";
+        position: absolute;
+        inset: 4px;
+        border-radius: 18px;
+        border: 2px solid #f4d08a; /* emas luar */
+        pointer-events: none;
+    }
+
+    .principal-photo-frame::after {
+        content: "";
+        position: absolute;
+        inset: 10px;
+        border-radius: 14px;
+        border: 2px solid #d9b765; /* emas dalam */
+        pointer-events: none;
+    }
+
+    .principal-photo-frame img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        border-radius: 14px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+        position: relative;
+        z-index: 1;
+    }
+</style>
 @endsection
 
 @section('scripts')
-<script>
-$(document).ready(function() {
-    // Load stats
-    loadStats();
-});
-
-function loadStats() {
-    $.get(API_BASE_URL + '/admin/dashboard/stats')
-        .done(function(response) {
-            if (response.success) {
-                $('#total-students').text(response.data.total_students);
-                $('#total-teachers').text(response.data.total_teachers);
-                $('#total-classes').text(response.data.total_classes);
-                $('#total-subjects').text(response.data.total_subjects);
-            }
-        })
-        .fail(function() {
-            // Fallback values if API is not accessible
-            $('#total-students').text('0');
-            $('#total-teachers').text('0');
-            $('#total-classes').text('0');
-            $('#total-subjects').text('0');
-        });
-}
-</script>
-@endsection

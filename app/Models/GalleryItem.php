@@ -17,13 +17,23 @@ class GalleryItem extends Model
 
     public function comments()
     {
-        return $this->hasMany(GalleryComment::class);
+        return $this->hasMany(GalleryUserComment::class);
     }
 
     public function approvedComments()
     {
-        return $this->hasMany(GalleryComment::class)->where('is_approved', true);
+        return $this->hasMany(GalleryUserComment::class)->where('is_approved', true);
+    }
+    
+    // Add relationship for reactions
+    public function reactions()
+    {
+        return $this->hasMany(GalleryReaction::class);
+    }
+    
+    // Add relationship for user comments
+    public function userComments()
+    {
+        return $this->hasMany(GalleryUserComment::class);
     }
 }
-
-

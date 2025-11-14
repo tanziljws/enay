@@ -6,7 +6,10 @@
 <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h3 class="mb-0">Galeri Kegiatan</h3>
-        <a href="{{ route('admin.gallery.create') }}" class="btn btn-primary">Tambah Foto</a>
+        <div>
+            <a href="{{ route('admin.gallery.statistics') }}" class="btn btn-info">Statistik</a>
+            <a href="{{ route('admin.gallery.create') }}" class="btn btn-primary">Tambah Foto</a>
+        </div>
     </div>
 
     @if(session('success'))
@@ -40,5 +43,3 @@
     <div class="mt-3">{{ $items->links() }}</div>
 </div>
 @endsection
-
-

@@ -92,7 +92,7 @@
                                     <br>
                                     <small class="text-muted">{{ $comment->user->email }}</small>
                                 </td>
-                                <td>{{ $comment->teacher->name ?? 'N/A' }}</td>
+                                <td>{{ $comment->commentable->name ?? 'N/A' }}</td>
                                 <td>{{ $comment->comment }}</td>
                                 <td>{{ $comment->created_at->diffForHumans() }}</td>
                                 <td>

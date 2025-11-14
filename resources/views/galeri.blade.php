@@ -124,9 +124,37 @@
         @endforelse
     </div>
 
-    <div class="d-flex justify-content-center">
-        {{ $items->links() }}
-    </div>
+    @if(method_exists($items, 'hasPages') && $items->hasPages())
+        <div class="d-flex justify-content-center align-items-center mt-4 gap-3">
+            {{-- Tombol Previous --}}
+            @if($items->onFirstPage())
+                <button class="btn btn-outline-secondary" disabled>
+                    &laquo; Sebelumnya
+                </button>
+            @else
+                <a href="{{ $items->previousPageUrl() }}" class="btn btn-outline-secondary">
+                    &laquo; Sebelumnya
+                </a>
+            @endif
+
+            {{-- Informasi halaman --}}
+            <span class="text-muted small">
+                Halaman {{ $items->currentPage() }} dari {{ $items->lastPage() }}
+            </span>
+
+            {{-- Tombol Next --}}
+            @if($items->hasMorePages())
+                <a href="{{ $items->nextPageUrl() }}" class="btn btn-outline-secondary">
+                    Berikutnya &raquo;
+                </a>
+            @else
+                <button class="btn btn-outline-secondary" disabled>
+                    Berikutnya &raquo;
+                </button>
+            @endif
+        </div>
+    @endif
+
 </div>
 
 <script>

@@ -86,9 +86,10 @@ class UserInteractionController extends Controller
 
         $galleryItem = GalleryItem::findOrFail($id);
 
-        $comment = GalleryUserComment::create([
+        $comment = \App\Models\Comment::create([
             'user_id' => Auth::id(),
-            'gallery_item_id' => $id,
+            'commentable_type' => 'App\\Models\\GalleryItem',
+            'commentable_id' => $id,
             'comment' => $request->comment
         ]);
 
@@ -247,9 +248,10 @@ class UserInteractionController extends Controller
 
         $news = News::findOrFail($id);
 
-        $comment = NewsUserComment::create([
+        $comment = \App\Models\Comment::create([
             'user_id' => Auth::id(),
-            'news_id' => $id,
+            'commentable_type' => 'App\\Models\\News',
+            'commentable_id' => $id,
             'comment' => $request->comment
         ]);
 
@@ -408,9 +410,10 @@ class UserInteractionController extends Controller
 
         $teacher = Teacher::findOrFail($id);
 
-        $comment = TeacherComment::create([
+        $comment = \App\Models\Comment::create([
             'user_id' => Auth::id(),
-            'teacher_id' => $id,
+            'commentable_type' => 'App\\Models\\Teacher',
+            'commentable_id' => $id,
             'comment' => $request->comment
         ]);
 

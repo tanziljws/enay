@@ -208,7 +208,7 @@
                         <a class="nav-link {{ request()->is('jurusan') ? 'active' : '' }}" href="{{ url('/jurusan') }}">Keahlian</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->is('teachers*') ? 'active' : '' }}" href="{{ route('teachers.index', ['major' => 'PPLG']) }}">Guru</a>
+                        <a class="nav-link {{ request()->is('teachers*') ? 'active' : '' }}" href="{{ route('teachers.index') }}">Guru</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {{ request()->is('galeri') ? 'active' : '' }}" href="{{ url('/galeri') }}">Galeri</a>
@@ -330,10 +330,10 @@
                 <div class="col-md-4">
                     <h5>Ikuti Kami</h5>
                     <div class="social-links">
-                        <a href="#" class="text-white me-3"><i class="fab fa-facebook-f"></i></a>
-                        <a href="#" class="text-white me-3"><i class="fab fa-twitter"></i></a>
-                        <a href="#" class="text-white me-3"><i class="fab fa-instagram"></i></a>
-                        <a href="#" class="text-white me-3"><i class="fab fa-youtube"></i></a>
+                        <a href="https://web.facebook.com/smknegeri4bogor/?locale=id_ID&_rdc=1&_rdr#" class="text-white me-3"><i class="fab fa-facebook-f"></i></a>
+                        <a href="https://www.tiktok.com/404?fromUrl=/smkn4kotabogor" class="text-white me-3"><i class="fab fa-tiktok"></i></a>
+                        <a href="https://www.instagram.com/smkn4kotabogor?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" class="text-white me-3"><i class="fab fa-instagram"></i></a>
+                        <a href="https://www.youtube.com/@smknegeri4bogor905" class="text-white me-3"><i class="fab fa-youtube"></i></a>
                     </div>
                 </div>
             </div>

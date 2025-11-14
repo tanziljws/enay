@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\GalleryItem;
+use App\Models\GalleryReaction;
+use App\Models\GalleryUserComment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 
@@ -32,6 +34,7 @@ class GalleryAdminController extends Controller
             }
         }
     }
+    
     public function index()
     {
         $items = GalleryItem::orderByDesc('created_at')->paginate(12);
@@ -96,6 +99,74 @@ class GalleryAdminController extends Controller
         $gallery->delete();
         return redirect()->route('admin.gallery.index')->with('success', 'Foto dihapus');
     }
+    
+    // New method for gallery statistics
+    public function statistics()
+    {
+        // Get all gallery items with their statistics
+        $galleryItems = GalleryItem::withCount('userComments as approved_comments_count')
+        ->orderBy('created_at', 'desc')
+        ->get();
+        
+        // Calculate overall statistics
+        $totalItems = $galleryItems->count();
+        $totalViews = $galleryItems->sum('views_count');
+        $totalLikes = GalleryReaction::where('type', 'like')->count();
+        $totalDislikes = GalleryReaction::where('type', 'dislike')->count();
+        $totalComments = GalleryUserComment::count();
+        
+        // Top 5 most viewed items
+        $topViewed = $galleryItems->sortByDesc('views_count')->take(5);
+        
+        // Top 5 most liked items
+        $topLiked = $galleryItems->sortByDesc(function($item) {
+            return GalleryReaction::where('gallery_item_id', $item->id)->where('type', 'like')->count();
+        })->take(5);
+        
+        return view('admin.gallery.statistics', compact(
+            'galleryItems', 
+            'totalItems', 
+            'totalViews', 
+            'totalLikes', 
+            'totalDislikes', 
+            'totalComments', 
+            'topViewed', 
+            'topLiked'
+        ));
+    }
+    
+    // Method to generate printable report
+    public function printReport()
+    {
+        // Get all gallery items with their statistics
+        $galleryItems = GalleryItem::withCount('userComments as approved_comments_count')
+        ->orderBy('created_at', 'desc')
+        ->get();
+        
+        // Calculate overall statistics
+        $totalItems = $galleryItems->count();
+        $totalViews = $galleryItems->sum('views_count');
+        $totalLikes = GalleryReaction::where('type', 'like')->count();
+        $totalDislikes = GalleryReaction::where('type', 'dislike')->count();
+        $totalComments = GalleryUserComment::count();
+        
+        // Top 5 most viewed items
+        $topViewed = $galleryItems->sortByDesc('views_count')->take(5);
+        
+        // Top 5 most liked items
+        $topLiked = $galleryItems->sortByDesc(function($item) {
+            return GalleryReaction::where('gallery_item_id', $item->id)->where('type', 'like')->count();
+        })->take(5);
+        
+        return view('admin.gallery.print-report', compact(
+            'galleryItems', 
+            'totalItems', 
+            'totalViews', 
+            'totalLikes', 
+            'totalDislikes', 
+            'totalComments', 
+            'topViewed', 
+            'topLiked'
+        ));
+    }
 }
-
-

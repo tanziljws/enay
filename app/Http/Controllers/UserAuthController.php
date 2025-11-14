@@ -83,7 +83,7 @@ class UserAuthController extends Controller
         if ($userCaptcha !== $sessionCaptcha || empty($sessionCaptcha)) {
             return back()->withErrors([
                 'captcha' => 'Kode CAPTCHA salah. Silakan coba lagi.',
-            ])->onlyInput('email');
+            ])->withInput($request->except('password', 'password_confirmation'));
         }
         
         // Clear CAPTCHA from session after verification

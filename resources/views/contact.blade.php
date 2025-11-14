@@ -27,60 +27,11 @@
             <div class="col-lg-8">
                 <div class="card">
                     <div class="card-header">
-                        <h4 class="mb-0">Kirim Pesan</h4>
+                        <h4 class="mb-0">Gedung Sekolah SMK Negeri 4 Kota Bogor</h4>
                     </div>
-                    <div class="card-body">
-                        <div id="alert-container"></div>
-                        
-                        <form id="contact-form">
-                            @csrf
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="name" class="form-label">Nama Lengkap *</label>
-                                        <input type="text" class="form-control" id="name" name="name" required>
-                                        <div class="invalid-feedback"></div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="email" class="form-label">Email *</label>
-                                        <input type="email" class="form-control" id="email" name="email" required>
-                                        <div class="invalid-feedback"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="phone" class="form-label">Nomor Telepon</label>
-                                        <input type="tel" class="form-control" id="phone" name="phone">
-                                        <div class="invalid-feedback"></div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="subject" class="form-label">Subjek *</label>
-                                        <select class="form-select" id="subject" name="subject" required>
-                                            <option value="">Pilih Subjek</option>
-                                            <option value="informasi">Informasi Pendaftaran</option>
-                                            <option value="akademik">Pertanyaan Akademik</option>
-                                            <option value="fasilitas">Informasi Fasilitas</option>
-                                            <option value="lainnya">Lainnya</option>
-                                        </select>
-                                        <div class="invalid-feedback"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <label for="message" class="form-label">Pesan *</label>
-                                <textarea class="form-control" id="message" name="message" rows="5" required></textarea>
-                                <div class="invalid-feedback"></div>
-                            </div>
-                            <button type="submit" class="btn btn-primary" id="submit-btn">
-                                <i class="fas fa-paper-plane me-2"></i>Kirim Pesan
-                            </button>
-                        </form>
+                    <div class="card-body text-center">
+                        <img src="{{ asset('images/gedung.png') }}" alt="Gedung Sekolah" class="img-fluid rounded" style="max-height: 400px; object-fit: cover;">
+                        <p class="mt-3">Gedung sekolah kami yang nyaman untuk mendukung proses belajar mengajar yang optimal.</p>
                     </div>
                 </div>
             </div>
@@ -96,7 +47,8 @@
                                 <i class="fas fa-map-marker-alt text-primary me-3 mt-1"></i>
                                 <div>
                                     <h6 class="mb-1">Alamat</h6>
-                                    <p class="mb-0">Jl. Pendidikan No. 123<br>Jakarta 12345<br>Indonesia</p>
+                                    <p class="mb-0">Jl. Raya Tajur, Kp.Buntar RT.02/RW.08, Kel. Muarasari, Kec. Bogor Selatan.
+Jawa Barat 16137</p>
                                 </div>
                             </div>
                         </div>
@@ -106,7 +58,7 @@
                                 <i class="fas fa-phone text-primary me-3 mt-1"></i>
                                 <div>
                                     <h6 class="mb-1">Telepon</h6>
-                                    <p class="mb-0">(021) 1234-5678<br>(021) 1234-5679</p>
+                                    <p class="mb-0">(0251) 7547381<br>(0251) 7547381</p>
                                 </div>
                             </div>
                         </div>
@@ -116,7 +68,7 @@
                                 <i class="fas fa-envelope text-primary me-3 mt-1"></i>
                                 <div>
                                     <h6 class="mb-1">Email</h6>
-                                    <p class="mb-0">info@sekolah-enay.ac.id<br>admin@sekolah-enay.ac.id</p>
+                                    <p class="mb-0">smkn4@smkn4bogor.sch.id</p>
                                 </div>
                             </div>
                         </div>
@@ -143,17 +95,17 @@
                     </div>
                     <div class="card-body">
                         <div class="d-flex gap-3">
-                            <a href="https://www.facebook.com/USERNAME_ANDA" target="_blank" class="btn btn-outline-primary btn-lg" title="Facebook">
+                            <a href="https://www.facebook.com/smkn4kotabogor" target="_blank" class="btn btn-outline-primary btn-lg" title="Facebook">
                                 <i class="fab fa-facebook-f"></i>
-                            </a>
-                            <a href="https://twitter.com/USERNAME_ANDA" target="_blank" class="btn btn-outline-info btn-lg" title="Twitter">
-                                <i class="fab fa-twitter"></i>
                             </a>
                             <a href="https://www.instagram.com/smkn4kotabogor" target="_blank" class="btn btn-outline-danger btn-lg" title="Instagram">
                                 <i class="fab fa-instagram"></i>
                             </a>
                             <a href="https://wa.me/6285692728183" target="_blank" class="btn btn-outline-success btn-lg" title="WhatsApp">
                                 <i class="fab fa-whatsapp"></i>
+                            </a>
+                            <a href="https://www.tiktok.com/smkn4kotabogor" target="_blank" class="btn btn-outline-dark btn-lg" title="TikTok">
+                                <i class="fab fa-tiktok"></i>
                             </a>
                         </div>
                     </div>
@@ -251,96 +203,4 @@
         </div>
     </div>
 </section>
-@endsection
-
-@section('scripts')
-<script>
-$(document).ready(function() {
-    $('#contact-form').on('submit', function(e) {
-        e.preventDefault();
-        
-        // Clear previous errors
-        $('.form-control, .form-select').removeClass('is-invalid');
-        $('.invalid-feedback').text('');
-        $('#alert-container').html('');
-        
-        // Get form data
-        const formData = {
-            name: $('#name').val(),
-            email: $('#email').val(),
-            phone: $('#phone').val(),
-            subject: $('#subject').val(),
-            message: $('#message').val(),
-            _token: $('input[name="_token"]').val()
-        };
-        
-        // Show loading state
-        const submitBtn = $('#submit-btn');
-        const originalText = submitBtn.html();
-        submitBtn.html('<i class="fas fa-spinner fa-spin me-2"></i>Mengirim...').prop('disabled', true);
-        
-        // Send AJAX request
-        $.ajax({
-            url: '{{ route("contact.send") }}',
-            method: 'POST',
-            data: formData,
-            success: function(response) {
-                if (response.success) {
-                    // Show success message
-                    $('#alert-container').html(`
-                        <div class="alert alert-success alert-dismissible fade show" role="alert">
-                            <i class="fas fa-check-circle me-2"></i>${response.message}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    `);
-                    
-                    // Reset form
-                    $('#contact-form')[0].reset();
-                    
-                    // Scroll to alert
-                    $('html, body').animate({
-                        scrollTop: $('#alert-container').offset().top - 100
-                    }, 500);
-                }
-            },
-            error: function(xhr) {
-                if (xhr.status === 422) {
-                    // Validation errors
-                    const errors = xhr.responseJSON.errors;
-                    $.each(errors, function(field, messages) {
-                        const input = $(`#${field}`);
-                        input.addClass('is-invalid');
-                        input.siblings('.invalid-feedback').text(messages[0]);
-                    });
-                    
-                    $('#alert-container').html(`
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            <i class="fas fa-exclamation-circle me-2"></i>Mohon perbaiki kesalahan pada form.
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    `);
-                } else {
-                    // Server error
-                    const message = xhr.responseJSON?.message || 'Terjadi kesalahan. Silakan coba lagi.';
-                    $('#alert-container').html(`
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            <i class="fas fa-exclamation-circle me-2"></i>${message}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    `);
-                }
-                
-                // Scroll to alert
-                $('html, body').animate({
-                    scrollTop: $('#alert-container').offset().top - 100
-                }, 500);
-            },
-            complete: function() {
-                // Reset button
-                submitBtn.html(originalText).prop('disabled', false);
-            }
-        });
-    });
-});
-</script>
 @endsection

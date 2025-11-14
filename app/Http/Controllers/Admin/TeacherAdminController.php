@@ -48,7 +48,7 @@ class TeacherAdminController extends Controller
             'name' => 'required',
             'status' => 'required|in:active,inactive',
             'role' => 'required|in:guru,staff',
-            'gender' => 'nullable|in:male,female',
+            'gender' => 'required|in:male,female',
             'photo' => 'nullable|image|max:10240'
         ]);
         
@@ -78,7 +78,7 @@ class TeacherAdminController extends Controller
             'name' => 'sometimes|required',
             'status' => 'sometimes|in:active,inactive',
             'role' => 'sometimes|required|in:guru,staff',
-            'gender' => 'nullable|in:male,female',
+            'gender' => 'sometimes|required|in:male,female',
             'photo' => 'nullable|image|max:10240'
         ]);
         if ($request->hasFile('photo')) {

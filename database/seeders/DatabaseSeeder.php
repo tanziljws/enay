@@ -22,6 +22,8 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             TeacherSeeder::class,
+            PagesTableSeeder::class,
+            AdminSeeder::class,
         ]);
     }
 }
