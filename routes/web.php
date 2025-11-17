@@ -129,7 +129,15 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::resource('students', StudentAdminController::class);
     
     // Teacher management
-    Route::resource('teachers', TeacherAdminController::class);
+    Route::resource('teachers', TeacherAdminController::class)->names([
+        'index' => 'admin.teachers.index',
+        'create' => 'admin.teachers.create',
+        'store' => 'admin.teachers.store',
+        'show' => 'admin.teachers.show',
+        'edit' => 'admin.teachers.edit',
+        'update' => 'admin.teachers.update',
+        'destroy' => 'admin.teachers.destroy',
+    ]);
     
     // Major management
     Route::resource('majors', MajorAdminController::class);
