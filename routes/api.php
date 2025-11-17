@@ -53,7 +53,13 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::apiResource('students', StudentController::class);
     
     // Teachers
-    Route::apiResource('teachers', TeacherController::class);
+    Route::apiResource('teachers', TeacherController::class)->names([
+        'index' => 'api.teachers.index',
+        'store' => 'api.teachers.store',
+        'show' => 'api.teachers.show',
+        'update' => 'api.teachers.update',
+        'destroy' => 'api.teachers.destroy',
+    ]);
     
     // Class Rooms
     Route::apiResource('class-rooms', ClassRoomController::class);
