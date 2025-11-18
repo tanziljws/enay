@@ -158,13 +158,11 @@ async function refreshRegisterCaptcha() {
     const captchaText = document.getElementById('registerCaptchaText');
     captchaText.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
     
-    try {
-        // Try API route first (no CSRF), fallback to web route
-        let captchaUrl = '/api/captcha/generate?t=' + Date.now();
-        let data;
-        
+    // Helper function to load CAPTCHA from URL
+    async function loadCaptchaFromUrl(url) {
+        // Try fetch first
         try {
-            const response = await fetch(captchaUrl, {
+            const response = await fetch(url, {
                 method: 'GET',
                 mode: 'cors',
                 credentials: 'include',
@@ -179,82 +177,59 @@ async function refreshRegisterCaptcha() {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
             
-            data = await response.json();
+            return await response.json();
         } catch (fetchError) {
-            console.warn('API fetch failed, trying XMLHttpRequest:', fetchError);
-            try {
-                data = await new Promise((resolve, reject) => {
-                    const xhr = new XMLHttpRequest();
-                    xhr.open('GET', captchaUrl, true);
-                    xhr.setRequestHeader('Accept', 'application/json');
-                    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-                    xhr.withCredentials = true;
-                    xhr.onload = function() {
-                        if (xhr.status >= 200 && xhr.status < 300) {
-                            try {
-                                resolve(JSON.parse(xhr.responseText));
-                            } catch (e) {
-                                reject(new Error('Invalid JSON response'));
-                            }
-                        } else {
-                            reject(new Error(`HTTP ${xhr.status}: ${xhr.statusText}`));
-                        }
-                    };
-                    xhr.onerror = function() {
-                        reject(new Error('Network error'));
-                    };
-                    xhr.send();
-                });
-            } catch (apiError) {
-                console.warn('API route failed, trying web route:', apiError);
-                captchaUrl = '/captcha/generate?t=' + Date.now();
+            // Fallback to XMLHttpRequest
+            return new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.open('GET', url, true);
+                xhr.setRequestHeader('Accept', 'application/json');
+                xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                xhr.withCredentials = true;
                 
-                try {
-                    const response = await fetch(captchaUrl, {
-                        method: 'GET',
-                        mode: 'cors',
-                        credentials: 'include',
-                        cache: 'no-store',
-                        headers: {
-                            'Accept': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest'
+                xhr.onload = function() {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        try {
+                            resolve(JSON.parse(xhr.responseText));
+                        } catch (e) {
+                            reject(new Error('Invalid JSON response'));
                         }
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    } else {
+                        reject(new Error(`HTTP ${xhr.status}: ${xhr.statusText}`));
                     }
-                    
-                    data = await response.json();
-                } catch (fetchError) {
-                    console.warn('Web route fetch failed, trying XMLHttpRequest:', fetchError);
-                    data = await new Promise((resolve, reject) => {
-                        const xhr = new XMLHttpRequest();
-                        xhr.open('GET', captchaUrl, true);
-                        xhr.setRequestHeader('Accept', 'application/json');
-                        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-                        xhr.withCredentials = true;
-                        xhr.onload = function() {
-                            if (xhr.status >= 200 && xhr.status < 300) {
-                                try {
-                                    resolve(JSON.parse(xhr.responseText));
-                                } catch (e) {
-                                    reject(new Error('Invalid JSON response'));
-                                }
-                            } else {
-                                reject(new Error(`HTTP ${xhr.status}: ${xhr.statusText}`));
-                            }
-                        };
-                        xhr.onerror = function() {
-                            reject(new Error('Network error'));
-                        };
-                        xhr.send();
-                    });
-                }
+                };
+                
+                xhr.onerror = function() {
+                    reject(new Error('Network error'));
+                };
+                
+                xhr.send();
+            });
+        }
+    }
+    
+    try {
+        let data;
+        const timestamp = Date.now();
+        
+        // Try API route first (no CSRF)
+        try {
+            data = await loadCaptchaFromUrl('/api/captcha/generate?t=' + timestamp);
+        } catch (apiError) {
+            console.warn('API route failed, trying web route:', apiError);
+            // Fallback to web route
+            try {
+                data = await loadCaptchaFromUrl('/captcha/generate?t=' + timestamp);
+            } catch (webError) {
+                throw new Error('All CAPTCHA routes failed: ' + webError.message);
             }
         }
         
         // Display CAPTCHA with colorful characters
+        if (!data || !data.chars || data.chars.length === 0) {
+            throw new Error('Invalid CAPTCHA data received');
+        }
+        
         let html = '';
         data.chars.forEach((char, index) => {
             const color = captchaColors[index % captchaColors.length];
@@ -264,10 +239,13 @@ async function refreshRegisterCaptcha() {
         });
         captchaText.innerHTML = html;
         
-        document.getElementById('registerCaptchaInput').value = '';
+        const captchaInput = document.getElementById('registerCaptchaInput');
+        if (captchaInput) {
+            captchaInput.value = '';
+        }
     } catch (error) {
         console.error('Error loading CAPTCHA:', error);
-        captchaText.innerHTML = 'Error loading CAPTCHA';
+        captchaText.innerHTML = '<span style="color: red;">Error loading CAPTCHA. <a href="#" onclick="refreshRegisterCaptcha(); return false;">Klik untuk retry</a></span>';
     }
 }
 
