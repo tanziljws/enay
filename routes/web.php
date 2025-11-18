@@ -83,10 +83,10 @@ Route::get('/galeri', function () {
     return view('galeri', compact('items'));
 });
 
-// CAPTCHA routes for download modal
-Route::options('/captcha/generate', [CaptchaController::class, 'options']);
-Route::get('/captcha/generate', [CaptchaController::class, 'generate'])->name('captcha.generate');
-Route::post('/captcha/verify', [CaptchaController::class, 'verify'])->name('captcha.verify');
+// CAPTCHA routes for download modal - MUST be public, no middleware
+Route::options('/captcha/generate', [CaptchaController::class, 'options'])->middleware([]);
+Route::get('/captcha/generate', [CaptchaController::class, 'generate'])->name('captcha.generate')->middleware([]);
+Route::post('/captcha/verify', [CaptchaController::class, 'verify'])->name('captcha.verify')->middleware([]);
 
 // Teachers routes
 Route::get('/teachers', [TeacherController::class, 'index'])->name('teachers.index');

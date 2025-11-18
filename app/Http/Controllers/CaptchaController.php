@@ -25,12 +25,23 @@ class CaptchaController extends Controller
     public function generate(Request $request)
     {
         try {
+            // Start session if not started
+            if (!$request->hasSession()) {
+                \Log::warning('CAPTCHA: No session available');
+            }
+            
             // Generate random string
             $captchaText = $this->generateRandomString();
             
             // Store in session with explicit session save
-            $request->session()->put('captcha', $captchaText);
-            $request->session()->save();
+            try {
+                $request->session()->put('captcha', $captchaText);
+                $request->session()->save();
+                \Log::info('CAPTCHA generated and saved: ' . substr($captchaText, 0, 2) . '***');
+            } catch (\Exception $sessionError) {
+                \Log::error('CAPTCHA Session Error: ' . $sessionError->getMessage());
+                // Continue anyway, session might work later
+            }
             
             // Return JSON with captcha text for CSS display
             $response = response()->json([
