@@ -18,6 +18,10 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+// CAPTCHA routes - public, no auth needed
+Route::get('/captcha/generate', [\App\Http\Controllers\CaptchaController::class, 'generate']);
+Route::post('/captcha/verify', [\App\Http\Controllers\CaptchaController::class, 'verify']);
+
 // Public routes (no authentication required)
 Route::prefix('v1')->group(function () {
     Route::get('/attendance-photos', [AttendancePhotoController::class, 'index']);
