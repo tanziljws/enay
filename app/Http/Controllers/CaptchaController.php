@@ -24,20 +24,37 @@ class CaptchaController extends Controller
      */
     public function generate()
     {
-        // Generate random string
-        $captchaText = $this->generateRandomString();
-        
-        // Store in session
-        session(['captcha' => $captchaText]);
-        
-        // Return JSON with captcha text for CSS display
-        return response()->json([
-            'captcha' => $captchaText,
-            'chars' => str_split($captchaText)
-        ])->header('Access-Control-Allow-Origin', '*')
-          ->header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-          ->header('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With')
-          ->header('Cache-Control', 'no-cache, no-store, must-revalidate');
+        try {
+            // Generate random string
+            $captchaText = $this->generateRandomString();
+            
+            // Store in session
+            session(['captcha' => $captchaText]);
+            
+            // Return JSON with captcha text for CSS display
+            return response()->json([
+                'captcha' => $captchaText,
+                'chars' => str_split($captchaText)
+            ], 200, [
+                'Access-Control-Allow-Origin' => '*',
+                'Access-Control-Allow-Methods' => 'GET, POST, OPTIONS',
+                'Access-Control-Allow-Headers' => 'Content-Type, X-Requested-With, X-CSRF-TOKEN',
+                'Cache-Control' => 'no-cache, no-store, must-revalidate',
+                'Pragma' => 'no-cache',
+                'Expires' => '0',
+                'Content-Type' => 'application/json; charset=utf-8'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to generate CAPTCHA',
+                'message' => $e->getMessage()
+            ], 500, [
+                'Access-Control-Allow-Origin' => '*',
+                'Access-Control-Allow-Methods' => 'GET, POST, OPTIONS',
+                'Access-Control-Allow-Headers' => 'Content-Type, X-Requested-With, X-CSRF-TOKEN',
+                'Content-Type' => 'application/json; charset=utf-8'
+            ]);
+        }
     }
     
     /**
