@@ -155,26 +155,62 @@ const captchaColors = ['#3d4f5d', '#2c3e50', '#34495e', '#5d6d7e', '#566573', '#
 // Refresh CAPTCHA
 async function refreshLoginCaptcha() {
     const captchaText = document.getElementById('loginCaptchaText');
-    captchaText.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    captchaText.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
     
     try {
-        // Use relative URL to avoid mixed content issues
-        const captchaUrl = '{{ route("captcha.generate") }}?' + Date.now();
-        const response = await fetch(captchaUrl, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            credentials: 'same-origin',
-            cache: 'no-cache'
-        });
+        // Use absolute path to avoid any routing issues
+        const captchaUrl = '/captcha/generate?t=' + Date.now();
         
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+        // Try fetch first, fallback to XMLHttpRequest
+        let response, data;
+        
+        try {
+            response = await fetch(captchaUrl, {
+                method: 'GET',
+                mode: 'cors',
+                credentials: 'include',
+                cache: 'no-store',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            data = await response.json();
+        } catch (fetchError) {
+            console.warn('Fetch failed, trying XMLHttpRequest:', fetchError);
+            
+            // Fallback to XMLHttpRequest
+            data = await new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.open('GET', captchaUrl, true);
+                xhr.setRequestHeader('Accept', 'application/json');
+                xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                xhr.withCredentials = true;
+                
+                xhr.onload = function() {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        try {
+                            resolve(JSON.parse(xhr.responseText));
+                        } catch (e) {
+                            reject(new Error('Invalid JSON response'));
+                        }
+                    } else {
+                        reject(new Error(`HTTP ${xhr.status}: ${xhr.statusText}`));
+                    }
+                };
+                
+                xhr.onerror = function() {
+                    reject(new Error('Network error'));
+                };
+                
+                xhr.send();
+            });
         }
-        
-        const data = await response.json();
         
         // Display CAPTCHA with colorful characters
         let html = '';
