@@ -65,22 +65,51 @@ async function refreshTeacherCaptcha{{ $teacherId }}() {
     captchaText.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
     
     try {
-        const captchaUrl = '{{ route("captcha.generate") }}?' + Date.now();
-        const response = await fetch(captchaUrl, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            credentials: 'same-origin',
-            cache: 'no-cache'
-        });
+        const captchaUrl = '/captcha/generate?t=' + Date.now();
+        let data;
         
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+        try {
+            const response = await fetch(captchaUrl, {
+                method: 'GET',
+                mode: 'cors',
+                credentials: 'include',
+                cache: 'no-store',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            data = await response.json();
+        } catch (fetchError) {
+            console.warn('Fetch failed, trying XMLHttpRequest:', fetchError);
+            data = await new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.open('GET', captchaUrl, true);
+                xhr.setRequestHeader('Accept', 'application/json');
+                xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                xhr.withCredentials = true;
+                xhr.onload = function() {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        try {
+                            resolve(JSON.parse(xhr.responseText));
+                        } catch (e) {
+                            reject(new Error('Invalid JSON response'));
+                        }
+                    } else {
+                        reject(new Error(`HTTP ${xhr.status}: ${xhr.statusText}`));
+                    }
+                };
+                xhr.onerror = function() {
+                    reject(new Error('Network error'));
+                };
+                xhr.send();
+            });
         }
-        
-        const data = await response.json();
         
         let html = '';
         data.chars.forEach((char, index) => {
