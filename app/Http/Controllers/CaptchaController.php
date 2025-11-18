@@ -8,6 +8,18 @@ use Illuminate\Support\Str;
 class CaptchaController extends Controller
 {
     /**
+     * Handle OPTIONS request for CORS preflight
+     */
+    public function options()
+    {
+        return response('', 200)
+            ->header('Access-Control-Allow-Origin', '*')
+            ->header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+            ->header('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With, X-CSRF-TOKEN')
+            ->header('Access-Control-Max-Age', '3600');
+    }
+
+    /**
      * Generate CAPTCHA (return code for display)
      */
     public function generate()
@@ -22,7 +34,10 @@ class CaptchaController extends Controller
         return response()->json([
             'captcha' => $captchaText,
             'chars' => str_split($captchaText)
-        ]);
+        ])->header('Access-Control-Allow-Origin', '*')
+          ->header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+          ->header('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With')
+          ->header('Cache-Control', 'no-cache, no-store, must-revalidate');
     }
     
     /**
@@ -36,13 +51,18 @@ class CaptchaController extends Controller
         if ($userInput === $sessionCaptcha) {
             // Clear captcha from session
             session()->forget('captcha');
-            return response()->json(['success' => true]);
+            return response()->json(['success' => true])
+                ->header('Access-Control-Allow-Origin', '*')
+                ->header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+                ->header('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With');
         }
         
         return response()->json([
             'success' => false,
             'message' => 'Kode CAPTCHA salah'
-        ], 422);
+        ], 422)->header('Access-Control-Allow-Origin', '*')
+          ->header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+          ->header('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With');
     }
     
     /**

@@ -84,6 +84,7 @@ Route::get('/galeri', function () {
 });
 
 // CAPTCHA routes for download modal
+Route::options('/captcha/generate', [CaptchaController::class, 'options']);
 Route::get('/captcha/generate', [CaptchaController::class, 'generate'])->name('captcha.generate');
 Route::post('/captcha/verify', [CaptchaController::class, 'verify'])->name('captcha.verify');
 
