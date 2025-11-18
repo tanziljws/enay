@@ -94,7 +94,16 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Loading CAPTCHA from:', '{{ route("captcha.generate") }}');
         
         try {
-            const response = await fetch('{{ route("captcha.generate") }}?' + Date.now());
+            const captchaUrl = '{{ route("captcha.generate") }}?' + Date.now();
+            const response = await fetch(captchaUrl, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin',
+                cache: 'no-cache'
+            });
             console.log('CAPTCHA Response status:', response.status);
             
             if (!response.ok) {

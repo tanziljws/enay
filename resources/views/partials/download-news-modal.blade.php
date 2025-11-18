@@ -65,7 +65,21 @@ async function refreshNewsCaptcha{{ $newsId }}() {
     captchaText.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
     
     try {
-        const response = await fetch('{{ route("captcha.generate") }}?' + Date.now());
+        const captchaUrl = '{{ route("captcha.generate") }}?' + Date.now();
+        const response = await fetch(captchaUrl, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin',
+            cache: 'no-cache'
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
         
         let html = '';
