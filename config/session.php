@@ -169,7 +169,7 @@ return [
     |
     */
 
-    'secure' => env('SESSION_SECURE_COOKIE', null),
+    'secure' => env('SESSION_SECURE_COOKIE') !== null ? (bool) env('SESSION_SECURE_COOKIE') : null,
 
     /*
     |--------------------------------------------------------------------------
@@ -200,6 +200,15 @@ return [
     */
 
     'same_site' => env('SESSION_SAME_SITE', 'lax'),
+    
+    /*
+    |--------------------------------------------------------------------------
+    | Auto-detect Secure Cookie in Production
+    |--------------------------------------------------------------------------
+    |
+    | Automatically set secure cookie to true in production or when using HTTPS
+    |
+    */
 
     /*
     |--------------------------------------------------------------------------

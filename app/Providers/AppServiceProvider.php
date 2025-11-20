@@ -48,5 +48,14 @@ class AppServiceProvider extends ServiceProvider
         if ($forceHttps) {
             URL::forceScheme('https');
         }
+        
+        // Force secure session cookies in production/HTTPS
+        if ($forceHttps || $this->app->environment('production')) {
+            config(['session.secure' => true]);
+            // Set same_site to 'lax' for HTTPS (works better than 'none' for same-site requests)
+            if (config('session.same_site') === null) {
+                config(['session.same_site' => 'lax']);
+            }
+        }
     }
 }
