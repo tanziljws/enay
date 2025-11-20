@@ -130,14 +130,15 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::resource('students', StudentAdminController::class);
     
     // Teacher management - explicit names to avoid conflict with public teachers.index route
+    // Note: Don't include 'admin.' prefix because route group already has name('admin.')
     Route::resource('teachers', TeacherAdminController::class)->names([
-        'index' => 'admin.teachers.index',
-        'create' => 'admin.teachers.create',
-        'store' => 'admin.teachers.store',
-        'show' => 'admin.teachers.show',
-        'edit' => 'admin.teachers.edit',
-        'update' => 'admin.teachers.update',
-        'destroy' => 'admin.teachers.destroy',
+        'index' => 'teachers.index',
+        'create' => 'teachers.create',
+        'store' => 'teachers.store',
+        'show' => 'teachers.show',
+        'edit' => 'teachers.edit',
+        'update' => 'teachers.update',
+        'destroy' => 'teachers.destroy',
     ]);
     
     // Major management
