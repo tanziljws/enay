@@ -31,11 +31,22 @@ class UserAuthController extends Controller
             'captcha' => ['required', 'string', 'size:6'],
         ]);
 
-        // Verify CAPTCHA
-        $userCaptcha = strtoupper($request->input('captcha'));
-        $sessionCaptcha = strtoupper(session('captcha', ''));
+        // Verify CAPTCHA - TRIM whitespace first
+        $userCaptcha = strtoupper(trim($request->input('captcha', '')));
+        $sessionCaptcha = strtoupper(trim(session('captcha', '')));
+        
+        \Log::info('Register CAPTCHA Verification', [
+            'user_input' => substr($userCaptcha, 0, 2) . '***',
+            'session_captcha' => substr($sessionCaptcha, 0, 2) . '***',
+            'match' => $userCaptcha === $sessionCaptcha,
+            'session_has_captcha' => session()->has('captcha')
+        ]);
         
         if ($userCaptcha !== $sessionCaptcha || empty($sessionCaptcha)) {
+            \Log::warning('Register CAPTCHA Failed', [
+                'user_input' => $userCaptcha,
+                'session_captcha' => $sessionCaptcha
+            ]);
             return back()->withErrors([
                 'captcha' => 'Kode CAPTCHA salah. Silakan coba lagi.',
             ])->withInput($request->except('password', 'password_confirmation'));
@@ -43,6 +54,7 @@ class UserAuthController extends Controller
         
         // Clear CAPTCHA from session after verification
         session()->forget('captcha');
+        session()->save();
 
         $user = User::create([
             'name' => $request->name,
@@ -76,11 +88,22 @@ class UserAuthController extends Controller
             'captcha' => ['required', 'string', 'size:6'],
         ]);
 
-        // Verify CAPTCHA
-        $userCaptcha = strtoupper($request->input('captcha'));
-        $sessionCaptcha = strtoupper(session('captcha', ''));
+        // Verify CAPTCHA - TRIM whitespace first
+        $userCaptcha = strtoupper(trim($request->input('captcha', '')));
+        $sessionCaptcha = strtoupper(trim(session('captcha', '')));
+        
+        \Log::info('Login CAPTCHA Verification', [
+            'user_input' => substr($userCaptcha, 0, 2) . '***',
+            'session_captcha' => substr($sessionCaptcha, 0, 2) . '***',
+            'match' => $userCaptcha === $sessionCaptcha,
+            'session_has_captcha' => session()->has('captcha')
+        ]);
         
         if ($userCaptcha !== $sessionCaptcha || empty($sessionCaptcha)) {
+            \Log::warning('Login CAPTCHA Failed', [
+                'user_input' => $userCaptcha,
+                'session_captcha' => $sessionCaptcha
+            ]);
             return back()->withErrors([
                 'captcha' => 'Kode CAPTCHA salah. Silakan coba lagi.',
             ])->withInput($request->except('password', 'password_confirmation'));
@@ -88,6 +111,7 @@ class UserAuthController extends Controller
         
         // Clear CAPTCHA from session after verification
         session()->forget('captcha');
+        session()->save();
 
         $credentials = [
             'email' => $request->email,
