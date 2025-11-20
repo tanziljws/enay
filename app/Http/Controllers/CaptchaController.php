@@ -25,16 +25,23 @@ class CaptchaController extends Controller
      */
     public function generate(Request $request)
     {
+        // Generate random string FIRST (before any session operations)
+        $captchaText = $this->generateRandomString();
+        
         try {
             // Ensure session is started
             if (!$request->hasSession()) {
                 Log::warning('CAPTCHA: No session available, starting session');
-                $request->session()->start();
+                try {
+                    $request->session()->start();
+                } catch (\Exception $sessionStartError) {
+                    Log::error('CAPTCHA: Failed to start session', [
+                        'error' => $sessionStartError->getMessage()
+                    ]);
+                    // Continue - return CAPTCHA anyway
+                }
             }
             
-        // Generate random string
-        $captchaText = $this->generateRandomString();
-        
             // Store in session with explicit session save
             try {
                 $session = $request->session();
@@ -67,45 +74,34 @@ class CaptchaController extends Controller
                 ]);
                 // Continue anyway - CAPTCHA text is still generated
             }
-        
-        // Return JSON with captcha text for CSS display
-        // Even if session save failed, return the CAPTCHA so user can still see it
-        $response = response()->json([
-            'captcha' => $captchaText,
-            'chars' => str_split($captchaText),
-            'timestamp' => time()
-        ], 200);
-            
-            // Set headers explicitly
-            $response->headers->set('Access-Control-Allow-Origin', '*');
-            $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-            $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With, X-CSRF-TOKEN, Accept');
-            $response->headers->set('Access-Control-Allow-Credentials', 'true');
-            $response->headers->set('Cache-Control', 'no-cache, no-store, must-revalidate, private');
-            $response->headers->set('Pragma', 'no-cache');
-            $response->headers->set('Expires', '0');
-            $response->headers->set('Content-Type', 'application/json; charset=utf-8');
-            $response->headers->set('X-Content-Type-Options', 'nosniff');
-            
-            return $response;
         } catch (\Exception $e) {
             Log::error('CAPTCHA Generation Error: ' . $e->getMessage(), [
                 'exception' => get_class($e),
                 'trace' => $e->getTraceAsString()
             ]);
-            
-            $errorResponse = response()->json([
-                'error' => 'Failed to generate CAPTCHA',
-                'message' => $e->getMessage()
-            ], 500);
-            
-            $errorResponse->headers->set('Access-Control-Allow-Origin', '*');
-            $errorResponse->headers->set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-            $errorResponse->headers->set('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With, X-CSRF-TOKEN, Accept');
-            $errorResponse->headers->set('Content-Type', 'application/json; charset=utf-8');
-            
-            return $errorResponse;
+            // Continue - return CAPTCHA anyway even if there's an error
         }
+        
+        // Return JSON with captcha text for CSS display
+        // ALWAYS return CAPTCHA even if session save failed
+        $response = response()->json([
+            'captcha' => $captchaText,
+            'chars' => str_split($captchaText),
+            'timestamp' => time()
+        ], 200);
+        
+        // Set headers explicitly
+        $response->headers->set('Access-Control-Allow-Origin', '*');
+        $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+        $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With, X-CSRF-TOKEN, Accept');
+        $response->headers->set('Access-Control-Allow-Credentials', 'true');
+        $response->headers->set('Cache-Control', 'no-cache, no-store, must-revalidate, private');
+        $response->headers->set('Pragma', 'no-cache');
+        $response->headers->set('Expires', '0');
+        $response->headers->set('Content-Type', 'application/json; charset=utf-8');
+        $response->headers->set('X-Content-Type-Options', 'nosniff');
+        
+        return $response;
     }
     
     /**
