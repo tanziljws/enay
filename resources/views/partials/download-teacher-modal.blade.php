@@ -60,55 +60,80 @@
 <script>
 const captchaColorsTeacher{{ $teacherId }} = ['#3d4f5d', '#2c3e50', '#34495e', '#5d6d7e', '#566573', '#4a5568'];
 
+// Helper function to load CAPTCHA from URL
+async function loadCaptchaFromUrlTeacher{{ $teacherId }}(url) {
+    // Try fetch first
+    try {
+        const response = await fetch(url, {
+            method: 'GET',
+            mode: 'cors',
+            credentials: 'include',
+            cache: 'no-store',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        return await response.json();
+    } catch (fetchError) {
+        // Fallback to XMLHttpRequest
+        return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', url, true);
+            xhr.setRequestHeader('Accept', 'application/json');
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            xhr.withCredentials = true;
+            
+            xhr.onload = function() {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    try {
+                        resolve(JSON.parse(xhr.responseText));
+                    } catch (e) {
+                        reject(new Error('Invalid JSON response'));
+                    }
+                } else {
+                    reject(new Error(`HTTP ${xhr.status}: ${xhr.statusText}`));
+                }
+            };
+            
+            xhr.onerror = function() {
+                reject(new Error('Network error'));
+            };
+            
+            xhr.send();
+        });
+    }
+}
+
 async function refreshTeacherCaptcha{{ $teacherId }}() {
     const captchaText = document.getElementById('teacherCaptchaText{{ $teacherId }}');
-    captchaText.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    captchaText.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
     
     try {
-        const captchaUrl = '/captcha/generate?t=' + Date.now();
         let data;
+        const timestamp = Date.now();
         
+        // Try API route first (no CSRF)
         try {
-            const response = await fetch(captchaUrl, {
-                method: 'GET',
-                mode: 'cors',
-                credentials: 'include',
-                cache: 'no-store',
-                headers: {
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });
-            
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            data = await loadCaptchaFromUrlTeacher{{ $teacherId }}('/api/captcha/generate?t=' + timestamp);
+        } catch (apiError) {
+            console.warn('API route failed, trying web route:', apiError);
+            // Fallback to web route
+            try {
+                data = await loadCaptchaFromUrlTeacher{{ $teacherId }}('/captcha/generate?t=' + timestamp);
+            } catch (webError) {
+                throw new Error('All CAPTCHA routes failed: ' + webError.message);
             }
-            
-            data = await response.json();
-        } catch (fetchError) {
-            console.warn('Fetch failed, trying XMLHttpRequest:', fetchError);
-            data = await new Promise((resolve, reject) => {
-                const xhr = new XMLHttpRequest();
-                xhr.open('GET', captchaUrl, true);
-                xhr.setRequestHeader('Accept', 'application/json');
-                xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-                xhr.withCredentials = true;
-                xhr.onload = function() {
-                    if (xhr.status >= 200 && xhr.status < 300) {
-                        try {
-                            resolve(JSON.parse(xhr.responseText));
-                        } catch (e) {
-                            reject(new Error('Invalid JSON response'));
-                        }
-                    } else {
-                        reject(new Error(`HTTP ${xhr.status}: ${xhr.statusText}`));
-                    }
-                };
-                xhr.onerror = function() {
-                    reject(new Error('Network error'));
-                };
-                xhr.send();
-            });
+        }
+        
+        // Display CAPTCHA with colorful characters
+        if (!data || !data.chars || data.chars.length === 0) {
+            throw new Error('Invalid CAPTCHA data received');
         }
         
         let html = '';
@@ -120,11 +145,14 @@ async function refreshTeacherCaptcha{{ $teacherId }}() {
         });
         captchaText.innerHTML = html;
         
-        document.getElementById('teacherCaptchaInput{{ $teacherId }}').value = '';
-        document.getElementById('captchaErrorTeacher{{ $teacherId }}').classList.add('d-none');
+        const captchaInput = document.getElementById('teacherCaptchaInput{{ $teacherId }}');
+        if (captchaInput) captchaInput.value = '';
+        
+        const captchaError = document.getElementById('captchaErrorTeacher{{ $teacherId }}');
+        if (captchaError) captchaError.classList.add('d-none');
     } catch (error) {
         console.error('Error loading CAPTCHA:', error);
-        captchaText.innerHTML = 'Error loading CAPTCHA';
+        captchaText.innerHTML = `<small style="color: red;">Error: ${error.message}<br><a href="#" onclick="refreshTeacherCaptcha{{ $teacherId }}(); return false;">Klik untuk retry</a></small>`;
     }
 }
 

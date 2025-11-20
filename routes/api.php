@@ -19,6 +19,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 // CAPTCHA routes - public, no auth needed
+Route::options('/captcha/generate', [\App\Http\Controllers\CaptchaController::class, 'options']);
 Route::get('/captcha/generate', [\App\Http\Controllers\CaptchaController::class, 'generate']);
 Route::post('/captcha/verify', [\App\Http\Controllers\CaptchaController::class, 'verify']);
 

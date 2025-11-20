@@ -81,6 +81,56 @@ document.addEventListener('DOMContentLoaded', function() {
     // Colors for CAPTCHA characters
     const captchaColors = ['#56B4E9', '#E69F00', '#009E73', '#D55E00', '#0072B2', '#CC79A7'];
 
+    // Helper function to load CAPTCHA from URL
+    async function loadCaptchaFromUrl{{ $type }}{{ $itemId }}(url) {
+        // Try fetch first
+        try {
+            const response = await fetch(url, {
+                method: 'GET',
+                mode: 'cors',
+                credentials: 'include',
+                cache: 'no-store',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            return await response.json();
+        } catch (fetchError) {
+            // Fallback to XMLHttpRequest
+            return new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.open('GET', url, true);
+                xhr.setRequestHeader('Accept', 'application/json');
+                xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                xhr.withCredentials = true;
+                
+                xhr.onload = function() {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        try {
+                            resolve(JSON.parse(xhr.responseText));
+                        } catch (e) {
+                            reject(new Error('Invalid JSON response'));
+                        }
+                    } else {
+                        reject(new Error(`HTTP ${xhr.status}: ${xhr.statusText}`));
+                    }
+                };
+                
+                xhr.onerror = function() {
+                    reject(new Error('Network error'));
+                };
+                
+                xhr.send();
+            });
+        }
+    }
+
     // Refresh CAPTCHA
     window.refreshCaptcha{{ $type }}{{ $itemId }} = async function() {
         const captchaText = document.getElementById('captchaText{{ $type }}{{ $itemId }}');
@@ -91,67 +141,33 @@ document.addEventListener('DOMContentLoaded', function() {
         
         captchaText.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
         
-        console.log('Loading CAPTCHA from:', '{{ route("captcha.generate") }}');
-        
         try {
-            const captchaUrl = '/captcha/generate?t=' + Date.now();
             let data;
+            const timestamp = Date.now();
             
+            // Try API route first (no CSRF)
             try {
-                const response = await fetch(captchaUrl, {
-                    method: 'GET',
-                    mode: 'cors',
-                    credentials: 'include',
-                    cache: 'no-store',
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                });
-                console.log('CAPTCHA Response status:', response.status);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                data = await loadCaptchaFromUrl{{ $type }}{{ $itemId }}('/api/captcha/generate?t=' + timestamp);
+            } catch (apiError) {
+                console.warn('API route failed, trying web route:', apiError);
+                // Fallback to web route
+                try {
+                    data = await loadCaptchaFromUrl{{ $type }}{{ $itemId }}('/captcha/generate?t=' + timestamp);
+                } catch (webError) {
+                    throw new Error('All CAPTCHA routes failed: ' + webError.message);
                 }
-                
-                data = await response.json();
-            } catch (fetchError) {
-                console.warn('Fetch failed, trying XMLHttpRequest:', fetchError);
-                data = await new Promise((resolve, reject) => {
-                    const xhr = new XMLHttpRequest();
-                    xhr.open('GET', captchaUrl, true);
-                    xhr.setRequestHeader('Accept', 'application/json');
-                    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-                    xhr.withCredentials = true;
-                    xhr.onload = function() {
-                        if (xhr.status >= 200 && xhr.status < 300) {
-                            try {
-                                resolve(JSON.parse(xhr.responseText));
-                            } catch (e) {
-                                reject(new Error('Invalid JSON response'));
-                            }
-                        } else {
-                            reject(new Error(`HTTP ${xhr.status}: ${xhr.statusText}`));
-                        }
-                    };
-                    xhr.onerror = function() {
-                        reject(new Error('Network error'));
-                    };
-                    xhr.send();
-                });
-            }
-            console.log('CAPTCHA Data:', data);
-            
-            if (!data.chars || data.chars.length === 0) {
-                throw new Error('Invalid CAPTCHA data');
             }
             
             // Display CAPTCHA with colorful characters
+            if (!data || !data.chars || data.chars.length === 0) {
+                throw new Error('Invalid CAPTCHA data received');
+            }
+            
             let html = '';
             data.chars.forEach((char, index) => {
                 const color = captchaColors[index % captchaColors.length];
-                const rotation = (Math.random() - 0.5) * 20; // Random rotation -10 to 10 degrees
-                const yOffset = Math.random() * 10 - 5; // Random vertical offset
+                const rotation = (Math.random() - 0.5) * 20;
+                const yOffset = Math.random() * 10 - 5;
                 html += `<span style="color: ${color}; transform: rotate(${rotation}deg) translateY(${yOffset}px); display: inline-block; margin: 0 3px;">${char}</span>`;
             });
             captchaText.innerHTML = html;

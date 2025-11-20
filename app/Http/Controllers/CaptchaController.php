@@ -25,27 +25,35 @@ class CaptchaController extends Controller
     public function generate(Request $request)
     {
         try {
-            // Start session if not started
+            // Ensure session is started
             if (!$request->hasSession()) {
-                \Log::warning('CAPTCHA: No session available');
+                \Log::warning('CAPTCHA: No session available, starting session');
+                $request->session()->start();
             }
             
-            // Generate random string
-            $captchaText = $this->generateRandomString();
-            
+        // Generate random string
+        $captchaText = $this->generateRandomString();
+        
             // Store in session with explicit session save
             try {
-                $request->session()->put('captcha', $captchaText);
-                $request->session()->save();
-                \Log::info('CAPTCHA generated and saved: ' . substr($captchaText, 0, 2) . '***');
+                $session = $request->session();
+                $session->put('captcha', $captchaText);
+                $session->save();
+                \Log::info('CAPTCHA generated and saved: ' . substr($captchaText, 0, 2) . '***', [
+                    'session_id' => $session->getId(),
+                    'has_captcha' => $session->has('captcha')
+                ]);
             } catch (\Exception $sessionError) {
-                \Log::error('CAPTCHA Session Error: ' . $sessionError->getMessage());
-                // Continue anyway, session might work later
+                \Log::error('CAPTCHA Session Error: ' . $sessionError->getMessage(), [
+                    'exception' => get_class($sessionError),
+                    'trace' => $sessionError->getTraceAsString()
+                ]);
+                // Try to continue, but log the issue
             }
-            
-            // Return JSON with captcha text for CSS display
+        
+        // Return JSON with captcha text for CSS display
             $response = response()->json([
-                'captcha' => $captchaText,
+            'captcha' => $captchaText,
                 'chars' => str_split($captchaText),
                 'timestamp' => time()
             ], 200);
@@ -84,24 +92,57 @@ class CaptchaController extends Controller
      */
     public function verify(Request $request)
     {
-        $userInput = strtoupper($request->input('captcha'));
-        $sessionCaptcha = strtoupper(session('captcha', ''));
-        
-        if ($userInput === $sessionCaptcha) {
+        try {
+            // Ensure session is available
+            if (!$request->hasSession()) {
+                $request->session()->start();
+            }
+            
+            $userInput = strtoupper($request->input('captcha', ''));
+            $sessionCaptcha = strtoupper($request->session()->get('captcha', ''));
+            
+            \Log::info('CAPTCHA Verification', [
+                'user_input' => substr($userInput, 0, 2) . '***',
+                'session_captcha' => substr($sessionCaptcha, 0, 2) . '***',
+                'match' => $userInput === $sessionCaptcha,
+                'session_id' => $request->session()->getId()
+            ]);
+            
+            if ($userInput === $sessionCaptcha && !empty($sessionCaptcha)) {
             // Clear captcha from session
-            session()->forget('captcha');
-            return response()->json(['success' => true])
-                ->header('Access-Control-Allow-Origin', '*')
-                ->header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-                ->header('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With');
-        }
-        
-        return response()->json([
+                $request->session()->forget('captcha');
+                $request->session()->save();
+                
+                $response = response()->json(['success' => true]);
+                $response->headers->set('Access-Control-Allow-Origin', '*');
+                $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+                $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With, X-CSRF-TOKEN, Accept');
+                $response->headers->set('Access-Control-Allow-Credentials', 'true');
+                return $response;
+            }
+            
+            $errorResponse = response()->json([
             'success' => false,
             'message' => 'Kode CAPTCHA salah'
-        ], 422)->header('Access-Control-Allow-Origin', '*')
-          ->header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-          ->header('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With');
+        ], 422);
+            $errorResponse->headers->set('Access-Control-Allow-Origin', '*');
+            $errorResponse->headers->set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+            $errorResponse->headers->set('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With, X-CSRF-TOKEN, Accept');
+            $errorResponse->headers->set('Access-Control-Allow-Credentials', 'true');
+            return $errorResponse;
+        } catch (\Exception $e) {
+            \Log::error('CAPTCHA Verify Error: ' . $e->getMessage());
+            
+            $errorResponse = response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat verifikasi CAPTCHA'
+            ], 500);
+            $errorResponse->headers->set('Access-Control-Allow-Origin', '*');
+            $errorResponse->headers->set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+            $errorResponse->headers->set('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With, X-CSRF-TOKEN, Accept');
+            $errorResponse->headers->set('Access-Control-Allow-Credentials', 'true');
+            return $errorResponse;
+        }
     }
     
     /**
