@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 class CaptchaController extends Controller
 {
@@ -27,7 +28,7 @@ class CaptchaController extends Controller
         try {
             // Ensure session is started
             if (!$request->hasSession()) {
-                \Log::warning('CAPTCHA: No session available, starting session');
+                Log::warning('CAPTCHA: No session available, starting session');
                 $request->session()->start();
             }
             
@@ -50,7 +51,7 @@ class CaptchaController extends Controller
                 // Verify it was saved
                 $savedCaptcha = $session->get('captcha');
                 
-                \Log::info('CAPTCHA generated and saved', [
+                Log::info('CAPTCHA generated and saved', [
                     'captcha_text' => substr($captchaText, 0, 2) . '***',
                     'captcha_length' => strlen($captchaText),
                     'session_id' => $session->getId(),
@@ -59,20 +60,21 @@ class CaptchaController extends Controller
                     'saved_matches' => $savedCaptcha === $captchaText
                 ]);
             } catch (\Exception $sessionError) {
-                \Log::error('CAPTCHA Session Error: ' . $sessionError->getMessage(), [
+                Log::error('CAPTCHA Session Error: ' . $sessionError->getMessage(), [
                     'exception' => get_class($sessionError),
                     'trace' => $sessionError->getTraceAsString(),
                     'session_id' => $request->hasSession() ? $request->session()->getId() : 'no-session'
                 ]);
-                // Try to continue, but log the issue
+                // Continue anyway - CAPTCHA text is still generated
             }
         
         // Return JSON with captcha text for CSS display
-            $response = response()->json([
+        // Even if session save failed, return the CAPTCHA so user can still see it
+        $response = response()->json([
             'captcha' => $captchaText,
-                'chars' => str_split($captchaText),
-                'timestamp' => time()
-            ], 200);
+            'chars' => str_split($captchaText),
+            'timestamp' => time()
+        ], 200);
             
             // Set headers explicitly
             $response->headers->set('Access-Control-Allow-Origin', '*');
@@ -87,7 +89,10 @@ class CaptchaController extends Controller
             
             return $response;
         } catch (\Exception $e) {
-            \Log::error('CAPTCHA Generation Error: ' . $e->getMessage());
+            Log::error('CAPTCHA Generation Error: ' . $e->getMessage(), [
+                'exception' => get_class($e),
+                'trace' => $e->getTraceAsString()
+            ]);
             
             $errorResponse = response()->json([
                 'error' => 'Failed to generate CAPTCHA',
@@ -119,7 +124,7 @@ class CaptchaController extends Controller
             $sessionCaptcha = strtoupper(trim($request->session()->get('captcha', '')));
             
             // Detailed logging for debugging
-            \Log::info('CAPTCHA Verification', [
+            Log::info('CAPTCHA Verification', [
                 'user_input_raw' => $request->input('captcha', ''),
                 'user_input_trimmed' => $userInput,
                 'user_input_length' => strlen($userInput),
@@ -134,7 +139,7 @@ class CaptchaController extends Controller
             
             // Check if session captcha exists
             if (empty($sessionCaptcha)) {
-                \Log::warning('CAPTCHA Verification Failed: Session CAPTCHA is empty', [
+                Log::warning('CAPTCHA Verification Failed: Session CAPTCHA is empty', [
                     'session_id' => $request->session()->getId(),
                     'has_captcha' => $request->session()->has('captcha')
                 ]);
@@ -155,7 +160,7 @@ class CaptchaController extends Controller
                 $request->session()->forget('captcha');
                 $request->session()->save();
                 
-                \Log::info('CAPTCHA Verification Success', [
+                Log::info('CAPTCHA Verification Success', [
                     'session_id' => $request->session()->getId()
                 ]);
                 
@@ -167,7 +172,7 @@ class CaptchaController extends Controller
                 return $response;
             }
             
-            \Log::warning('CAPTCHA Verification Failed: Mismatch', [
+            Log::warning('CAPTCHA Verification Failed: Mismatch', [
                 'user_input' => $userInput,
                 'session_captcha' => $sessionCaptcha,
                 'session_id' => $request->session()->getId()
@@ -183,7 +188,7 @@ class CaptchaController extends Controller
             $errorResponse->headers->set('Access-Control-Allow-Credentials', 'true');
             return $errorResponse;
         } catch (\Exception $e) {
-            \Log::error('CAPTCHA Verify Error: ' . $e->getMessage(), [
+            Log::error('CAPTCHA Verify Error: ' . $e->getMessage(), [
                 'exception' => get_class($e),
                 'trace' => $e->getTraceAsString(),
                 'session_id' => $request->hasSession() ? $request->session()->getId() : 'no-session'

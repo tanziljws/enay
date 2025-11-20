@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rules\Password;
 
 class UserAuthController extends Controller
@@ -35,7 +36,7 @@ class UserAuthController extends Controller
         $userCaptcha = strtoupper(trim($request->input('captcha', '')));
         $sessionCaptcha = strtoupper(trim(session('captcha', '')));
         
-        \Log::info('Register CAPTCHA Verification', [
+        Log::info('Register CAPTCHA Verification', [
             'user_input' => substr($userCaptcha, 0, 2) . '***',
             'session_captcha' => substr($sessionCaptcha, 0, 2) . '***',
             'match' => $userCaptcha === $sessionCaptcha,
@@ -43,7 +44,7 @@ class UserAuthController extends Controller
         ]);
         
         if ($userCaptcha !== $sessionCaptcha || empty($sessionCaptcha)) {
-            \Log::warning('Register CAPTCHA Failed', [
+            Log::warning('Register CAPTCHA Failed', [
                 'user_input' => $userCaptcha,
                 'session_captcha' => $sessionCaptcha
             ]);
@@ -92,7 +93,7 @@ class UserAuthController extends Controller
         $userCaptcha = strtoupper(trim($request->input('captcha', '')));
         $sessionCaptcha = strtoupper(trim(session('captcha', '')));
         
-        \Log::info('Login CAPTCHA Verification', [
+        Log::info('Login CAPTCHA Verification', [
             'user_input' => substr($userCaptcha, 0, 2) . '***',
             'session_captcha' => substr($sessionCaptcha, 0, 2) . '***',
             'match' => $userCaptcha === $sessionCaptcha,
@@ -100,7 +101,7 @@ class UserAuthController extends Controller
         ]);
         
         if ($userCaptcha !== $sessionCaptcha || empty($sessionCaptcha)) {
-            \Log::warning('Login CAPTCHA Failed', [
+            Log::warning('Login CAPTCHA Failed', [
                 'user_input' => $userCaptcha,
                 'session_captcha' => $sessionCaptcha
             ]);
