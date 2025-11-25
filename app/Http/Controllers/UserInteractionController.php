@@ -95,10 +95,16 @@ class UserInteractionController extends Controller
             'user_id' => Auth::id(),
             'commentable_type' => 'App\\Models\\GalleryItem',
             'commentable_id' => $id,
-            'comment' => $request->comment
+            'comment' => $request->comment,
+            'is_approved' => true // Auto-approve for authenticated users
         ]);
 
         $comment->load('user');
+
+        // Get updated comment count
+        $commentsCount = \App\Models\Comment::where('commentable_type', 'App\\Models\\GalleryItem')
+            ->where('commentable_id', $id)
+            ->count();
 
         return response()->json([
             'success' => true,
@@ -107,8 +113,10 @@ class UserInteractionController extends Controller
                 'id' => $comment->id,
                 'user_name' => $comment->user->name,
                 'comment' => $comment->comment,
-                'created_at' => $comment->created_at->diffForHumans()
-            ]
+                'created_at' => $comment->created_at->diffForHumans(),
+                'can_delete' => true
+            ],
+            'commentsCount' => $commentsCount
         ]);
     }
 
@@ -118,8 +126,13 @@ class UserInteractionController extends Controller
     public function getGalleryComments($id)
     {
         // Use new Comment model with polymorphic relationship
-        $comments = \App\Models\Comment::where('commentable_type', 'App\Models\GalleryItem')
+        // Only show approved comments or comments by current user
+        $comments = \App\Models\Comment::where('commentable_type', 'App\\Models\\GalleryItem')
             ->where('commentable_id', $id)
+            ->where(function($query) {
+                $query->where('is_approved', true)
+                      ->orWhere('user_id', Auth::id()); // Show own comments even if not approved
+            })
             ->with('user')
             ->orderBy('created_at', 'desc')
             ->get()
@@ -135,7 +148,8 @@ class UserInteractionController extends Controller
 
         return response()->json([
             'success' => true,
-            'comments' => $comments
+            'comments' => $comments,
+            'count' => $comments->count()
         ]);
     }
 
@@ -153,11 +167,22 @@ class UserInteractionController extends Controller
             ], 403);
         }
 
+        $galleryItemId = $comment->commentable_id;
         $comment->delete();
+
+        // Get updated comment count
+        $commentsCount = \App\Models\Comment::where('commentable_type', 'App\\Models\\GalleryItem')
+            ->where('commentable_id', $galleryItemId)
+            ->where(function($query) {
+                $query->where('is_approved', true)
+                      ->orWhere('user_id', Auth::id());
+            })
+            ->count();
 
         return response()->json([
             'success' => true,
-            'message' => 'Komentar berhasil dihapus'
+            'message' => 'Komentar berhasil dihapus',
+            'commentsCount' => $commentsCount
         ]);
     }
 
@@ -262,10 +287,16 @@ class UserInteractionController extends Controller
             'user_id' => Auth::id(),
             'commentable_type' => 'App\\Models\\News',
             'commentable_id' => $id,
-            'comment' => $request->comment
+            'comment' => $request->comment,
+            'is_approved' => true // Auto-approve for authenticated users
         ]);
 
         $comment->load('user');
+
+        // Get updated comment count
+        $commentsCount = \App\Models\Comment::where('commentable_type', 'App\\Models\\News')
+            ->where('commentable_id', $id)
+            ->count();
 
         return response()->json([
             'success' => true,
@@ -274,8 +305,10 @@ class UserInteractionController extends Controller
                 'id' => $comment->id,
                 'user_name' => $comment->user->name,
                 'comment' => $comment->comment,
-                'created_at' => $comment->created_at->diffForHumans()
-            ]
+                'created_at' => $comment->created_at->diffForHumans(),
+                'can_delete' => true
+            ],
+            'commentsCount' => $commentsCount
         ]);
     }
 
@@ -285,8 +318,13 @@ class UserInteractionController extends Controller
     public function getNewsComments($id)
     {
         // Use new Comment model with polymorphic relationship
-        $comments = \App\Models\Comment::where('commentable_type', 'App\Models\News')
+        // Only show approved comments or comments by current user
+        $comments = \App\Models\Comment::where('commentable_type', 'App\\Models\\News')
             ->where('commentable_id', $id)
+            ->where(function($query) {
+                $query->where('is_approved', true)
+                      ->orWhere('user_id', Auth::id()); // Show own comments even if not approved
+            })
             ->with('user')
             ->orderBy('created_at', 'desc')
             ->get()
@@ -302,7 +340,8 @@ class UserInteractionController extends Controller
 
         return response()->json([
             'success' => true,
-            'comments' => $comments
+            'comments' => $comments,
+            'count' => $comments->count()
         ]);
     }
 
@@ -320,11 +359,22 @@ class UserInteractionController extends Controller
             ], 403);
         }
 
+        $newsId = $comment->commentable_id;
         $comment->delete();
+
+        // Get updated comment count
+        $commentsCount = \App\Models\Comment::where('commentable_type', 'App\\Models\\News')
+            ->where('commentable_id', $newsId)
+            ->where(function($query) {
+                $query->where('is_approved', true)
+                      ->orWhere('user_id', Auth::id());
+            })
+            ->count();
 
         return response()->json([
             'success' => true,
-            'message' => 'Komentar berhasil dihapus'
+            'message' => 'Komentar berhasil dihapus',
+            'commentsCount' => $commentsCount
         ]);
     }
 
@@ -429,10 +479,16 @@ class UserInteractionController extends Controller
             'user_id' => Auth::id(),
             'commentable_type' => 'App\\Models\\Teacher',
             'commentable_id' => $id,
-            'comment' => $request->comment
+            'comment' => $request->comment,
+            'is_approved' => true // Auto-approve for authenticated users
         ]);
 
         $comment->load('user');
+
+        // Get updated comment count
+        $commentsCount = \App\Models\Comment::where('commentable_type', 'App\\Models\\Teacher')
+            ->where('commentable_id', $id)
+            ->count();
 
         return response()->json([
             'success' => true,
@@ -441,8 +497,10 @@ class UserInteractionController extends Controller
                 'id' => $comment->id,
                 'user_name' => $comment->user->name,
                 'comment' => $comment->comment,
-                'created_at' => $comment->created_at->diffForHumans()
-            ]
+                'created_at' => $comment->created_at->diffForHumans(),
+                'can_delete' => true
+            ],
+            'commentsCount' => $commentsCount
         ]);
     }
 
@@ -452,8 +510,13 @@ class UserInteractionController extends Controller
     public function getTeacherComments($id)
     {
         // Use new Comment model with polymorphic relationship
-        $comments = \App\Models\Comment::where('commentable_type', 'App\Models\Teacher')
+        // Only show approved comments or comments by current user
+        $comments = \App\Models\Comment::where('commentable_type', 'App\\Models\\Teacher')
             ->where('commentable_id', $id)
+            ->where(function($query) {
+                $query->where('is_approved', true)
+                      ->orWhere('user_id', Auth::id()); // Show own comments even if not approved
+            })
             ->with('user')
             ->orderBy('created_at', 'desc')
             ->get()
@@ -469,7 +532,8 @@ class UserInteractionController extends Controller
 
         return response()->json([
             'success' => true,
-            'comments' => $comments
+            'comments' => $comments,
+            'count' => $comments->count()
         ]);
     }
 
@@ -487,11 +551,22 @@ class UserInteractionController extends Controller
             ], 403);
         }
 
+        $teacherId = $comment->commentable_id;
         $comment->delete();
+
+        // Get updated comment count
+        $commentsCount = \App\Models\Comment::where('commentable_type', 'App\\Models\\Teacher')
+            ->where('commentable_id', $teacherId)
+            ->where(function($query) {
+                $query->where('is_approved', true)
+                      ->orWhere('user_id', Auth::id());
+            })
+            ->count();
 
         return response()->json([
             'success' => true,
-            'message' => 'Komentar berhasil dihapus'
+            'message' => 'Komentar berhasil dihapus',
+            'commentsCount' => $commentsCount
         ]);
     }
 }

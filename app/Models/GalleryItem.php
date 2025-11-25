@@ -15,26 +15,34 @@ class GalleryItem extends Model
         'taken_at' => 'datetime',
     ];
 
+    /**
+     * Polymorphic comments relationship (new system)
+     */
     public function comments()
     {
-        return $this->hasMany(GalleryUserComment::class);
+        return $this->morphMany(Comment::class, 'commentable');
     }
 
+    /**
+     * Approved comments only
+     */
     public function approvedComments()
     {
-        return $this->hasMany(GalleryUserComment::class)->where('is_approved', true);
+        return $this->morphMany(Comment::class, 'commentable')->where('is_approved', true);
+    }
+    
+    /**
+     * Legacy relationship for backward compatibility
+     */
+    public function userComments()
+    {
+        return $this->hasMany(GalleryUserComment::class);
     }
     
     // Add relationship for reactions
     public function reactions()
     {
         return $this->hasMany(GalleryReaction::class);
-    }
-    
-    // Add relationship for user comments
-    public function userComments()
-    {
-        return $this->hasMany(GalleryUserComment::class);
     }
     
     /**

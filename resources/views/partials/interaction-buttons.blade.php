@@ -325,9 +325,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     commentInput.value = '';
                     loadComments();
                     
-                    // Update comment count
-                    const count = parseInt(container.querySelector('.comments-count').textContent) + 1;
-                    container.querySelector('.comments-count').textContent = count;
+                    // Update comment count from API response
+                    if (data.commentsCount !== undefined) {
+                        container.querySelector('.comments-count').textContent = data.commentsCount;
+                    } else {
+                        // Fallback: increment count
+                        const count = parseInt(container.querySelector('.comments-count').textContent) + 1;
+                        container.querySelector('.comments-count').textContent = count;
+                    }
                 }
             } catch (error) {
                 console.error('Error:', error);
@@ -355,9 +360,14 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.success) {
                 loadComments();
                 
-                // Update comment count
-                const count = Math.max(0, parseInt(container.querySelector('.comments-count').textContent) - 1);
-                container.querySelector('.comments-count').textContent = count;
+                // Update comment count from API response
+                if (data.commentsCount !== undefined) {
+                    container.querySelector('.comments-count').textContent = data.commentsCount;
+                } else {
+                    // Fallback: decrement count
+                    const count = Math.max(0, parseInt(container.querySelector('.comments-count').textContent) - 1);
+                    container.querySelector('.comments-count').textContent = count;
+                }
             }
         } catch (error) {
             console.error('Error:', error);

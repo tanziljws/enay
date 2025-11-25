@@ -65,7 +65,9 @@ Route::get('/galeri', function () {
             'reactions as dislikes_count' => function($query) {
                 $query->where('type', 'dislike');
             },
-            'comments as comments_count'
+            'comments as comments_count' => function($query) {
+                $query->where('is_approved', true);
+            }
         ])
         ->orderBy('taken_at', 'desc')
         ->orderBy('created_at', 'desc')

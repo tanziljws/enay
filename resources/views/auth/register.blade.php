@@ -154,7 +154,7 @@
 const captchaColors = ['#3d4f5d', '#2c3e50', '#34495e', '#5d6d7e', '#566573', '#4a5568'];
 
 // Refresh CAPTCHA
-async function refreshRegisterCaptcha() {
+async function refreshRegisterCaptcha(refresh = true) {
     const captchaText = document.getElementById('registerCaptchaText');
     captchaText.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
     
@@ -211,15 +211,16 @@ async function refreshRegisterCaptcha() {
     try {
         let data;
         const timestamp = Date.now();
+        const refreshParam = refresh ? '&refresh=true' : ''; // Only refresh if explicitly requested
         
         // Try API route first (no CSRF)
         try {
-            data = await loadCaptchaFromUrl('/api/captcha/generate?t=' + timestamp);
+            data = await loadCaptchaFromUrl('/api/captcha/generate?t=' + timestamp + refreshParam);
         } catch (apiError) {
             console.warn('API route failed, trying web route:', apiError);
             // Fallback to web route
             try {
-                data = await loadCaptchaFromUrl('/captcha/generate?t=' + timestamp);
+                data = await loadCaptchaFromUrl('/captcha/generate?t=' + timestamp + refreshParam);
             } catch (webError) {
                 throw new Error('All CAPTCHA routes failed: ' + webError.message);
             }
@@ -258,8 +259,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Load CAPTCHA on page load
-    refreshRegisterCaptcha();
+    // Load CAPTCHA on page load (without refresh to preserve session)
+    refreshRegisterCaptcha(false);
 });
 </script>
 @endsection

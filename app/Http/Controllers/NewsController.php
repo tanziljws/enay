@@ -26,7 +26,9 @@ class NewsController extends Controller
                 'newsReactions as dislikes_count' => function($query) {
                     $query->where('type', 'dislike');
                 },
-                'comments as comments_count'
+                'comments as comments_count' => function($query) {
+                    $query->where('is_approved', true);
+                }
             ])
             ->findOrFail($id);
         
