@@ -43,14 +43,18 @@ class UserInteractionController extends Controller
             ->where('gallery_item_id', $id)
             ->first();
 
+        $userReaction = null;
+
         if ($reaction) {
             if ($reaction->type === $type) {
                 // Remove reaction if clicking same button
                 $reaction->delete();
+                $userReaction = null; // No reaction after delete
                 $message = 'Reaksi dihapus';
             } else {
                 // Change reaction type
                 $reaction->update(['type' => $type]);
+                $userReaction = $type; // Return new type
                 $message = 'Reaksi diubah menjadi ' . $type;
             }
         } else {
@@ -60,6 +64,7 @@ class UserInteractionController extends Controller
                 'gallery_item_id' => $id,
                 'type' => $type
             ]);
+            $userReaction = $type; // Return new type
             $message = 'Reaksi ' . $type . ' ditambahkan';
         }
 
@@ -71,7 +76,7 @@ class UserInteractionController extends Controller
             'message' => $message,
             'likes' => $likes,
             'dislikes' => $dislikes,
-            'userReaction' => $reaction ? $reaction->type : null
+            'userReaction' => $userReaction
         ]);
     }
 
@@ -208,12 +213,16 @@ class UserInteractionController extends Controller
             ->where('news_id', $id)
             ->first();
 
+        $userReaction = null;
+
         if ($reaction) {
             if ($reaction->type === $type) {
                 $reaction->delete();
+                $userReaction = null; // No reaction after delete
                 $message = 'Reaksi dihapus';
             } else {
                 $reaction->update(['type' => $type]);
+                $userReaction = $type; // Return new type
                 $message = 'Reaksi diubah menjadi ' . $type;
             }
         } else {
@@ -222,6 +231,7 @@ class UserInteractionController extends Controller
                 'news_id' => $id,
                 'type' => $type
             ]);
+            $userReaction = $type; // Return new type
             $message = 'Reaksi ' . $type . ' ditambahkan';
         }
 
@@ -233,7 +243,7 @@ class UserInteractionController extends Controller
             'message' => $message,
             'likes' => $likes,
             'dislikes' => $dislikes,
-            'userReaction' => $reaction ? $reaction->type : null
+            'userReaction' => $userReaction
         ]);
     }
 
@@ -370,12 +380,16 @@ class UserInteractionController extends Controller
             ->where('teacher_id', $id)
             ->first();
 
+        $userReaction = null;
+
         if ($reaction) {
             if ($reaction->type === $type) {
                 $reaction->delete();
+                $userReaction = null; // No reaction after delete
                 $message = 'Reaksi dihapus';
             } else {
                 $reaction->update(['type' => $type]);
+                $userReaction = $type; // Return new type
                 $message = 'Reaksi diubah menjadi ' . $type;
             }
         } else {
@@ -384,6 +398,7 @@ class UserInteractionController extends Controller
                 'teacher_id' => $id,
                 'type' => $type
             ]);
+            $userReaction = $type; // Return new type
             $message = 'Reaksi ' . $type . ' ditambahkan';
         }
 
@@ -395,7 +410,7 @@ class UserInteractionController extends Controller
             'message' => $message,
             'likes' => $likes,
             'dislikes' => $dislikes,
-            'userReaction' => $reaction ? $reaction->type : null
+            'userReaction' => $userReaction
         ]);
     }
 

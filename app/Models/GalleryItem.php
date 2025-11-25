@@ -36,4 +36,20 @@ class GalleryItem extends Model
     {
         return $this->hasMany(GalleryUserComment::class);
     }
+    
+    /**
+     * Get current user's reaction (like/dislike/null)
+     */
+    public function getUserReactionAttribute()
+    {
+        if (!auth()->check()) {
+            return null;
+        }
+        
+        $reaction = GalleryReaction::where('user_id', auth()->id())
+            ->where('gallery_item_id', $this->id)
+            ->first();
+            
+        return $reaction ? $reaction->type : null;
+    }
 }

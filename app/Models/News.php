@@ -37,4 +37,28 @@ class News extends Model
     {
         return $this->morphMany(Reaction::class, 'reactable');
     }
+    
+    /**
+     * Get news-specific reactions (for backward compatibility)
+     */
+    public function newsReactions()
+    {
+        return $this->hasMany(NewsReaction::class);
+    }
+    
+    /**
+     * Get current user's reaction (like/dislike/null)
+     */
+    public function getUserReactionAttribute()
+    {
+        if (!auth()->check()) {
+            return null;
+        }
+        
+        $reaction = NewsReaction::where('user_id', auth()->id())
+            ->where('news_id', $this->id)
+            ->first();
+            
+        return $reaction ? $reaction->type : null;
+    }
 }

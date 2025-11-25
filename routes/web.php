@@ -58,6 +58,15 @@ Route::get('/jurusan', function () {
 
 Route::get('/galeri', function () {
     $items = \App\Models\GalleryItem::where('status','published')
+        ->withCount([
+            'reactions as likes_count' => function($query) {
+                $query->where('type', 'like');
+            },
+            'reactions as dislikes_count' => function($query) {
+                $query->where('type', 'dislike');
+            },
+            'comments as comments_count'
+        ])
         ->orderBy('taken_at', 'desc')
         ->orderBy('created_at', 'desc')
         ->paginate(12);

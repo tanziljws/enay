@@ -54,4 +54,20 @@ class Teacher extends Model
     {
         return $this->morphMany(Reaction::class, 'reactable');
     }
+    
+    /**
+     * Get current user's reaction (like/dislike/null)
+     */
+    public function getUserReactionAttribute()
+    {
+        if (!auth()->check()) {
+            return null;
+        }
+        
+        $reaction = TeacherReaction::where('user_id', auth()->id())
+            ->where('teacher_id', $this->id)
+            ->first();
+            
+        return $reaction ? $reaction->type : null;
+    }
 }

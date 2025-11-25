@@ -211,24 +211,18 @@ class TeacherController extends Controller
     public function show($id)
     {
         $teacher = Teacher::with(['reactions', 'comments.user'])
-            ->withCount(['reactions as likes_count' => function($query) {
-                $query->where('type', 'like');
-            }])
-            ->withCount(['reactions as dislikes_count' => function($query) {
-                $query->where('type', 'dislike');
-            }])
-            ->withCount('comments')
+            ->withCount([
+                'reactions as likes_count' => function($query) {
+                    $query->where('type', 'like');
+                },
+                'reactions as dislikes_count' => function($query) {
+                    $query->where('type', 'dislike');
+                },
+                'comments as comments_count'
+            ])
             ->findOrFail($id);
         
-        // Get user's reaction if authenticated
-        if (auth()->check()) {
-            $userReaction = $teacher->reactions()
-                ->where('user_id', auth()->id())
-                ->first();
-            $teacher->user_reaction = $userReaction ? $userReaction->type : null;
-        } else {
-            $teacher->user_reaction = null;
-        }
+        // user_reaction is automatically available via accessor
         
         return view('teachers.show', compact('teacher'));
     }
