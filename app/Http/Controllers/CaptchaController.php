@@ -21,13 +21,21 @@ class CaptchaController extends Controller
     }
 
     /**
+     * CAPTCHA expiration time in seconds (5 minutes)
+     */
+    private const CAPTCHA_EXPIRATION = 300; // 5 minutes
+    
+    /**
      * Generate CAPTCHA (return code for display)
+     * 
+     * SECURITY FEATURES:
+     * - CAPTCHA expires after 5 minutes
+     * - Only generate NEW CAPTCHA if expired, refresh=true, or no existing CAPTCHA
+     * - CAPTCHA stored in server-side session (not in client cookie)
+     * - Session cookie is HTTP-only and secure
      */
     public function generate(Request $request)
     {
-        // Generate random string FIRST (before any session operations)
-        $captchaText = $this->generateRandomString();
-        
         try {
             // Ensure session is started
             if (!$request->hasSession()) {
@@ -38,33 +46,86 @@ class CaptchaController extends Controller
                     Log::error('CAPTCHA: Failed to start session', [
                         'error' => $sessionStartError->getMessage()
                     ]);
-                    // Continue - return CAPTCHA anyway
                 }
             }
             
-            // Store in session with explicit session save
-            try {
-                $session = $request->session();
+            $session = $request->session();
+            $forceRefresh = $request->boolean('refresh', false);
+            $currentTime = time();
+            
+            // Check if CAPTCHA already exists in session and is not expired
+            if (!$forceRefresh && $session->has('captcha') && $session->has('captcha_expires_at')) {
+                $captchaExpiresAt = $session->get('captcha_expires_at');
                 
+                // Check if CAPTCHA is still valid (not expired)
+                if ($captchaExpiresAt > $currentTime) {
+                    $existingCaptcha = $session->get('captcha');
+                    $timeRemaining = $captchaExpiresAt - $currentTime;
+                    
+                    Log::info('CAPTCHA: Returning existing CAPTCHA from session', [
+                        'captcha_text' => substr($existingCaptcha, 0, 2) . '***',
+                        'session_id' => $session->getId(),
+                        'expires_at' => $captchaExpiresAt,
+                        'time_remaining' => $timeRemaining . 's',
+                        'force_refresh' => false
+                    ]);
+                    
+                    // Return existing CAPTCHA without resetting session
+                    $response = response()->json([
+                        'captcha' => $existingCaptcha,
+                        'chars' => str_split($existingCaptcha),
+                        'timestamp' => $currentTime,
+                        'expires_at' => $captchaExpiresAt,
+                        'expires_in' => $timeRemaining,
+                        'cached' => true
+                    ], 200);
+                    
+                    $this->setCorsHeaders($response);
+                    $this->setSessionCookie($response, $session);
+                    return $response;
+                } else {
+                    // CAPTCHA expired, clear it
+                    Log::info('CAPTCHA: Expired, generating new one', [
+                        'expired_at' => $captchaExpiresAt,
+                        'current_time' => $currentTime,
+                        'session_id' => $session->getId()
+                    ]);
+                    $session->forget('captcha');
+                    $session->forget('captcha_expires_at');
+                }
+            }
+            
+            // Generate NEW CAPTCHA (either expired, refresh=true, or no existing CAPTCHA)
+            $captchaText = $this->generateRandomString();
+            $expiresAt = $currentTime + self::CAPTCHA_EXPIRATION;
+            
+            // Store in session with expiration time
+            try {
                 // Clear any existing CAPTCHA first to prevent conflicts
                 $session->forget('captcha');
+                $session->forget('captcha_expires_at');
                 
-                // Store new CAPTCHA
+                // Store new CAPTCHA with expiration
                 $session->put('captcha', $captchaText);
+                $session->put('captcha_expires_at', $expiresAt);
                 
                 // Force save session
                 $session->save();
                 
                 // Verify it was saved
                 $savedCaptcha = $session->get('captcha');
+                $savedExpiresAt = $session->get('captcha_expires_at');
                 
                 Log::info('CAPTCHA generated and saved', [
                     'captcha_text' => substr($captchaText, 0, 2) . '***',
                     'captcha_length' => strlen($captchaText),
                     'session_id' => $session->getId(),
+                    'expires_at' => $expiresAt,
+                    'expires_in' => self::CAPTCHA_EXPIRATION . 's',
                     'has_captcha' => $session->has('captcha'),
                     'saved_captcha' => $savedCaptcha ? substr($savedCaptcha, 0, 2) . '***' : 'null',
-                    'saved_matches' => $savedCaptcha === $captchaText
+                    'saved_matches' => $savedCaptcha === $captchaText,
+                    'force_refresh' => $forceRefresh
                 ]);
             } catch (\Exception $sessionError) {
                 Log::error('CAPTCHA Session Error: ' . $sessionError->getMessage(), [
@@ -79,18 +140,51 @@ class CaptchaController extends Controller
                 'exception' => get_class($e),
                 'trace' => $e->getTraceAsString()
             ]);
-            // Continue - return CAPTCHA anyway even if there's an error
+            // Generate new CAPTCHA anyway even if there's an error
+            $captchaText = $this->generateRandomString();
+            $expiresAt = time() + self::CAPTCHA_EXPIRATION;
         }
         
         // Return JSON with captcha text for CSS display
-        // ALWAYS return CAPTCHA even if session save failed
         $response = response()->json([
             'captcha' => $captchaText,
             'chars' => str_split($captchaText),
-            'timestamp' => time()
+            'timestamp' => time(),
+            'expires_at' => $expiresAt ?? (time() + self::CAPTCHA_EXPIRATION),
+            'expires_in' => self::CAPTCHA_EXPIRATION,
+            'cached' => false
         ], 200);
         
-        // Set headers explicitly
+        $this->setCorsHeaders($response);
+        if ($request->hasSession()) {
+            $this->setSessionCookie($response, $request->session());
+        }
+        return $response;
+    }
+    
+    /**
+     * Ensure session cookie is properly set
+     * Laravel handles session cookies automatically, but we ensure session is saved
+     */
+    private function setSessionCookie($response, $session)
+    {
+        // Laravel automatically sets session cookie via StartSession middleware
+        // We just need to ensure session is saved
+        try {
+            $session->save();
+        } catch (\Exception $e) {
+            Log::warning('Failed to save session cookie', [
+                'error' => $e->getMessage(),
+                'session_id' => $session->getId()
+            ]);
+        }
+    }
+    
+    /**
+     * Set CORS headers for CAPTCHA responses
+     */
+    private function setCorsHeaders($response)
+    {
         $response->headers->set('Access-Control-Allow-Origin', '*');
         $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
         $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With, X-CSRF-TOKEN, Accept');
@@ -100,12 +194,12 @@ class CaptchaController extends Controller
         $response->headers->set('Expires', '0');
         $response->headers->set('Content-Type', 'application/json; charset=utf-8');
         $response->headers->set('X-Content-Type-Options', 'nosniff');
-        
-        return $response;
     }
     
     /**
      * Verify CAPTCHA
+     * 
+     * SECURITY: Checks expiration time before verification
      */
     public function verify(Request $request)
     {
@@ -115,73 +209,92 @@ class CaptchaController extends Controller
                 $request->session()->start();
             }
             
-            // TRIM whitespace and convert to uppercase
-            $userInput = strtoupper(trim($request->input('captcha', '')));
-            $sessionCaptcha = strtoupper(trim($request->session()->get('captcha', '')));
+            $session = $request->session();
+            $currentTime = time();
             
-            // Detailed logging for debugging
-            Log::info('CAPTCHA Verification', [
-                'user_input_raw' => $request->input('captcha', ''),
-                'user_input_trimmed' => $userInput,
-                'user_input_length' => strlen($userInput),
-                'session_captcha_raw' => $request->session()->get('captcha', ''),
-                'session_captcha_trimmed' => $sessionCaptcha,
-                'session_captcha_length' => strlen($sessionCaptcha),
-                'match' => $userInput === $sessionCaptcha,
-                'session_id' => $request->session()->getId(),
-                'session_exists' => $request->session()->has('captcha'),
-                'session_all' => $request->session()->all()
-            ]);
-            
-            // Check if session captcha exists
-            if (empty($sessionCaptcha)) {
+            // Check if CAPTCHA exists and is not expired
+            if (!$session->has('captcha') || !$session->has('captcha_expires_at')) {
                 Log::warning('CAPTCHA Verification Failed: Session CAPTCHA is empty', [
-                    'session_id' => $request->session()->getId(),
-                    'has_captcha' => $request->session()->has('captcha')
+                    'session_id' => $session->getId(),
+                    'has_captcha' => $session->has('captcha'),
+                    'has_expires_at' => $session->has('captcha_expires_at')
                 ]);
                 
                 $errorResponse = response()->json([
                     'success' => false,
                     'message' => 'Kode CAPTCHA tidak ditemukan. Silakan refresh CAPTCHA.'
                 ], 422);
-                $errorResponse->headers->set('Access-Control-Allow-Origin', '*');
-                $errorResponse->headers->set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-                $errorResponse->headers->set('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With, X-CSRF-TOKEN, Accept');
-                $errorResponse->headers->set('Access-Control-Allow-Credentials', 'true');
+                $this->setCorsHeaders($errorResponse);
                 return $errorResponse;
             }
             
+            // Check if CAPTCHA is expired
+            $captchaExpiresAt = $session->get('captcha_expires_at');
+            if ($captchaExpiresAt <= $currentTime) {
+                Log::warning('CAPTCHA Verification Failed: CAPTCHA expired', [
+                    'session_id' => $session->getId(),
+                    'expires_at' => $captchaExpiresAt,
+                    'current_time' => $currentTime,
+                    'expired_seconds_ago' => $currentTime - $captchaExpiresAt
+                ]);
+                
+                // Clear expired CAPTCHA
+                $session->forget('captcha');
+                $session->forget('captcha_expires_at');
+                $session->save();
+                
+                $errorResponse = response()->json([
+                    'success' => false,
+                    'message' => 'Kode CAPTCHA sudah kadaluarsa. Silakan refresh CAPTCHA.'
+                ], 422);
+                $this->setCorsHeaders($errorResponse);
+                return $errorResponse;
+            }
+            
+            // TRIM whitespace and convert to uppercase
+            $userInput = strtoupper(trim($request->input('captcha', '')));
+            $sessionCaptcha = strtoupper(trim($session->get('captcha', '')));
+            
+            // Detailed logging for debugging
+            Log::info('CAPTCHA Verification', [
+                'user_input_raw' => $request->input('captcha', ''),
+                'user_input_trimmed' => $userInput,
+                'user_input_length' => strlen($userInput),
+                'session_captcha_trimmed' => substr($sessionCaptcha, 0, 2) . '***',
+                'session_captcha_length' => strlen($sessionCaptcha),
+                'match' => $userInput === $sessionCaptcha,
+                'session_id' => $session->getId(),
+                'expires_at' => $captchaExpiresAt,
+                'time_remaining' => $captchaExpiresAt - $currentTime . 's'
+            ]);
+            
             if ($userInput === $sessionCaptcha && !empty($sessionCaptcha)) {
-                // Clear captcha from session
-                $request->session()->forget('captcha');
-                $request->session()->save();
+                // Clear captcha from session after successful verification
+                $session->forget('captcha');
+                $session->forget('captcha_expires_at');
+                $session->save();
                 
                 Log::info('CAPTCHA Verification Success', [
-                    'session_id' => $request->session()->getId()
+                    'session_id' => $session->getId(),
+                    'user_input' => $userInput
                 ]);
                 
                 $response = response()->json(['success' => true]);
-                $response->headers->set('Access-Control-Allow-Origin', '*');
-                $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-                $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With, X-CSRF-TOKEN, Accept');
-                $response->headers->set('Access-Control-Allow-Credentials', 'true');
+                $this->setCorsHeaders($response);
                 return $response;
             }
             
             Log::warning('CAPTCHA Verification Failed: Mismatch', [
                 'user_input' => $userInput,
-                'session_captcha' => $sessionCaptcha,
-                'session_id' => $request->session()->getId()
+                'session_captcha' => substr($sessionCaptcha, 0, 2) . '***',
+                'session_id' => $session->getId()
             ]);
             
             $errorResponse = response()->json([
                 'success' => false,
                 'message' => 'Kode CAPTCHA salah. Silakan coba lagi.'
             ], 422);
-            $errorResponse->headers->set('Access-Control-Allow-Origin', '*');
-            $errorResponse->headers->set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-            $errorResponse->headers->set('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With, X-CSRF-TOKEN, Accept');
-            $errorResponse->headers->set('Access-Control-Allow-Credentials', 'true');
+            $this->setCorsHeaders($errorResponse);
             return $errorResponse;
         } catch (\Exception $e) {
             Log::error('CAPTCHA Verify Error: ' . $e->getMessage(), [
@@ -194,10 +307,7 @@ class CaptchaController extends Controller
                 'success' => false,
                 'message' => 'Terjadi kesalahan saat verifikasi CAPTCHA'
             ], 500);
-            $errorResponse->headers->set('Access-Control-Allow-Origin', '*');
-            $errorResponse->headers->set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-            $errorResponse->headers->set('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With, X-CSRF-TOKEN, Accept');
-            $errorResponse->headers->set('Access-Control-Allow-Credentials', 'true');
+            $this->setCorsHeaders($errorResponse);
             return $errorResponse;
         }
     }

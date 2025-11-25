@@ -18,10 +18,17 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-// CAPTCHA routes - public, no auth needed
-Route::options('/captcha/generate', [\App\Http\Controllers\CaptchaController::class, 'options']);
-Route::get('/captcha/generate', [\App\Http\Controllers\CaptchaController::class, 'generate']);
-Route::post('/captcha/verify', [\App\Http\Controllers\CaptchaController::class, 'verify']);
+// CAPTCHA routes - public, no auth needed, but requires session
+// Using session middleware to enable session support for API routes
+Route::middleware([
+    \Illuminate\Session\Middleware\StartSession::class,
+    \Illuminate\Cookie\Middleware\EncryptCookies::class,
+    \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+])->group(function () {
+    Route::options('/captcha/generate', [\App\Http\Controllers\CaptchaController::class, 'options']);
+    Route::get('/captcha/generate', [\App\Http\Controllers\CaptchaController::class, 'generate']);
+    Route::post('/captcha/verify', [\App\Http\Controllers\CaptchaController::class, 'verify']);
+});
 
 // Public routes (no authentication required)
 Route::prefix('v1')->group(function () {
