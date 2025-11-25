@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\CommentAdminController;
 use App\Http\Controllers\Api\NewsController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\UserAuthController;
+use App\Http\Controllers\UserProfileController;
 use App\Http\Controllers\UserInteractionController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CaptchaController;
@@ -101,8 +102,9 @@ Route::post('/register', [UserAuthController::class, 'register'])->name('registe
 
 // Profile
 Route::middleware('auth')->group(function () {
-    Route::get('/profile', [UserAuthController::class, 'showProfile'])->name('profile.show');
-    Route::put('/profile', [UserAuthController::class, 'updateProfile'])->name('profile.update');
+    Route::get('/profile', [UserProfileController::class, 'show'])->name('profile.show');
+    Route::get('/profile/edit', [UserProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile', [UserProfileController::class, 'update'])->name('profile.update');
 });
 
 // Admin Authentication
